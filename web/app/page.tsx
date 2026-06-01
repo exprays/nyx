@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 
 // Project Changelog Component (Refactored for PlanetScale Monochrome theme with Sans/Mono fonts)
 function ChangelogSection() {
@@ -115,6 +116,12 @@ export default function Home() {
 
           {/* Nav Items (Naked Link style - Hidden on mobile/tablet to avoid overflow) */}
           <nav className="hidden md:flex items-center gap-6 text-sm font-semibold">
+            <Link
+              href="/playground"
+              className="text-flame-orange hover:text-midnight-graphite transition-colors py-1.5 font-sans font-bold"
+            >
+              PLAYGROUND
+            </Link>
             <button
               onClick={() => {
                 const el = document.getElementById("changelog-section");
@@ -136,10 +143,10 @@ export default function Home() {
 
           {/* Action button (Orange Action Button) */}
           <div className="whitespace-nowrap">
-            <button className="bg-flame-orange text-cloud-white text-[10px] sm:text-xs font-bold px-3 sm:px-4 py-2 hover:bg-opacity-90 cursor-pointer border-0 transition-opacity font-mono">
-              <span className="hidden sm:inline">GET EARLY ACCESS</span>
-              <span className="sm:hidden">GET ACCESS</span>
-            </button>
+            <Link href="/playground" className="bg-flame-orange text-cloud-white text-[10px] sm:text-xs font-bold px-3 sm:px-4 py-2 hover:bg-opacity-90 cursor-pointer border-0 transition-opacity font-mono inline-block">
+              <span className="hidden sm:inline">LAUNCH PLAYGROUND</span>
+              <span className="sm:hidden">PLAYGROUND</span>
+            </Link>
           </div>
 
         </div>
@@ -168,24 +175,22 @@ export default function Home() {
           {/* Action Row */}
           <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
             {/* Dark Overlay Button */}
+            <Link
+              href="/playground"
+              className="bg-midnight-graphite hover:bg-opacity-95 text-cloud-white text-xs font-bold px-6 py-3 cursor-pointer border-0 transition-opacity font-mono inline-block"
+            >
+              LAUNCH PLAYGROUND
+            </Link>
+            {/* Naked Link Button */}
             <button
               onClick={() => {
                 const el = document.getElementById("changelog-section");
                 if (el) el.scrollIntoView({ behavior: "smooth" });
               }}
-              className="bg-midnight-graphite hover:bg-opacity-95 text-cloud-white text-xs font-bold px-6 py-3 cursor-pointer border-0 transition-opacity font-mono"
-            >
-              VIEW THE SPEC
-            </button>
-            {/* Naked Link Button */}
-            <a
-              href="https://github.com/exprays/nyx"
-              target="_blank"
-              rel="noopener noreferrer"
               className="text-electric-blue hover:underline text-xs font-bold py-3 cursor-pointer border-0 bg-transparent flex items-center gap-1 font-mono"
             >
-              View on GitHub →
-            </a>
+              View specs & changelog →
+            </button>
           </div>
 
           {/* GPU CAD Architectural Blueprint Diagram Box */}
