@@ -2,7 +2,21 @@
 
 package isa
 
-// Opcode is a 4-bit instruction identifier
+// Opcode is a 4-bit instruction identifier.
+// The opcode values are defined as:
+// - 0x0: OP_ADD   (ADD Rd, Rs1, Rs2)
+// - 0x1: OP_SUB   (SUB Rd, Rs1, Rs2)
+// - 0x2: OP_MUL   (MUL Rd, Rs1, Rs2)
+// - 0x3: OP_DIV   (DIV Rd, Rs1, Rs2)
+// - 0x4: OP_CMP   (CMP Rs1, Rs2)
+// - 0x5: OP_BRnzp (BRnzp mask, offset)
+// - 0x6: OP_LDR   (LDR Rd, Rs)
+// - 0x7: OP_STR   (STR Rs1, Rs2)
+// - 0x8: OP_LDSH  (LDSH Rd, offset)
+// - 0x9: OP_STSH  (STSH offset, Rs)
+// - 0xA: OP_CONST (CONST Rd, #imm)
+// - 0xB: OP_SYNC  (SYNC)
+// - 0xC: OP_RET   (RET)
 type Opcode uint8
 
 const (
