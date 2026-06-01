@@ -9,7 +9,7 @@ export const metadata = {
 export default function BlogIndexPage() {
   return (
     <div className="min-h-screen bg-cloud-white text-steel-gray font-mono flex flex-col select-none selection:bg-electric-blue selection:text-cloud-white overflow-x-hidden">
-      
+
       {/* Top Banner (Flame Orange Banner consistent with home) */}
       <div className="w-full bg-flame-orange text-cloud-white text-[10px] sm:text-xs py-2.5 px-4 text-center font-bold tracking-tight border-b border-midnight-graphite font-mono">
         NYX ARCHITECTURE CURRICULUM CHAPTER 0 IS NOW LIVE.
@@ -18,7 +18,7 @@ export default function BlogIndexPage() {
       {/* Navigation Header */}
       <header className="w-full bg-cloud-white border-b border-stone-gray sticky top-0 z-50">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
-          
+
           {/* Logo brand */}
           <div className="flex items-center gap-2 sm:gap-3 whitespace-nowrap">
             <Link href="/" className="font-sans font-bold text-base sm:text-lg md:text-xl text-ash-black hover:text-electric-blue transition-colors tracking-tighter flex items-center gap-2">
@@ -72,7 +72,7 @@ export default function BlogIndexPage() {
 
       {/* Main Listing Layout */}
       <main className="flex-1 w-full max-w-[800px] mx-auto px-4 sm:px-6 py-12 sm:py-20 flex flex-col gap-10">
-        
+
         {/* Section Header */}
         <div className="border-b border-steel-gray pb-4 mb-4">
           <span className="text-[10px] sm:text-xs font-mono font-bold text-electric-blue uppercase tracking-widest block mb-1">
@@ -87,7 +87,7 @@ export default function BlogIndexPage() {
         </div>
 
         <div className="flex flex-col gap-8">
-          
+
           {/* Chapter 0 Entry */}
           <div className="border border-stone-gray bg-white p-6 sm:p-8 flex flex-col gap-4 hover:border-steel-gray transition-colors">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-gray pb-3">
@@ -103,15 +103,15 @@ export default function BlogIndexPage() {
             </div>
 
             <p className="font-mono text-xs sm:text-sm leading-relaxed text-steel-gray">
-              An architectural deep-dive into GPU throughput and CPU latency design principles. I explore thread scheduling, the SIMD model, warp execution, branch divergence, and the top-level NYX simulator layout.
+              An architectural deep-dive into GPU throughput and CPU latency design principles. I explore thread scheduling, the SIMD model, warp execution, branch divergence, and the top-level NYX implementation layout.
             </p>
 
             <div className="flex items-center justify-between mt-2 pt-2 border-t border-stone-gray border-opacity-30">
               <span className="text-[11px] font-mono text-smoke-gray uppercase tracking-wider">
-                8 MIN READ • BY S. SUBUDHI
+                8 MIN READ • BY SURYAKANT SUBUDHI
               </span>
-              <Link 
-                href="/blog/chapter-0" 
+              <Link
+                href="/blog/chapter-0"
                 className="text-xs font-bold font-mono text-electric-blue hover:underline flex items-center gap-1"
               >
                 READ CHAPTER 0 →
@@ -153,7 +153,7 @@ export default function BlogIndexPage() {
 
       {/* Footer */}
       <footer className="w-full border-t border-stone-gray pt-6 mt-12 pb-8 text-center text-xs font-mono text-smoke-gray flex flex-col md:flex-row justify-between gap-4 max-w-[1280px] mx-auto px-6 bg-cloud-white">
-        <span>NYX GPU SIMULATOR // AN OPEN SOURCE HARDWARE RESEARCH STUDY</span>
+        <span>NYX GPU IMPLEMENTATION // AN OPEN SOURCE HARDWARE RESEARCH STUDY</span>
         <span>COPYRIGHT © 2026 SURYAKANT SUBUDHI. ALL SPECIFICATIONS ARE OPEN SOURCE.</span>
       </footer>
 

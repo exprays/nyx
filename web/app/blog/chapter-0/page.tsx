@@ -286,7 +286,7 @@ export default function ChapterZeroPage() {
               NYX architecture overview
             </h2>
             <p className="font-mono text-xs sm:text-sm text-steel-gray leading-relaxed mb-4">
-              NYX is a cycle-accurate GPU simulator written in Go. Cycle-accurate means that every cycle, every component advances its state by exactly one step. Memory takes real cycles to respond. Warps stall when memory is pending. Branches cost real cycles.
+              NYX is a cycle-accurate GPU implementation written in Go. Cycle-accurate means that every cycle, every component advances its state by exactly one step. Memory takes real cycles to respond. Warps stall when memory is pending. Branches cost real cycles.
             </p>
 
             <p className="font-mono text-xs sm:text-sm text-steel-gray leading-relaxed mb-2">
@@ -370,7 +370,7 @@ export default function ChapterZeroPage() {
 
       {/* Footer */}
       <footer className="w-full border-t border-stone-gray pt-6 mt-12 pb-8 text-center text-xs font-mono text-smoke-gray flex flex-col md:flex-row justify-between gap-4 max-w-[1280px] mx-auto px-6 bg-cloud-white">
-        <span>NYX GPU SIMULATOR // AN OPEN SOURCE HARDWARE RESEARCH STUDY</span>
+        <span>NYX GPU IMPLEMENTATION // AN OPEN SOURCE HARDWARE RESEARCH STUDY</span>
         <span>COPYRIGHT © 2026 SURYAKANT SUBUDHI. ALL SPECIFICATIONS ARE OPEN SOURCE.</span>
       </footer>
 

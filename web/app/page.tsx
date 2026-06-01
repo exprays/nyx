@@ -33,7 +33,7 @@ function ChangelogSection() {
           </div>
 
           <p className="text-xs sm:text-sm leading-relaxed text-steel-gray font-mono">
-            The initial release wires up the foundation of the Nyx GPU pipeline. This cycle-accurate simulator simulates streaming multiprocessors (SMs), warps, thread registers, and memory scheduling logic in Go.
+            The initial release wires up the foundation of the Nyx GPU pipeline. This cycle-accurate implementation models streaming multiprocessors (SMs), warps, thread registers, and memory scheduling logic in Go.
           </p>
 
           <div className="flex flex-col gap-2">
@@ -41,7 +41,7 @@ function ChangelogSection() {
             <ul className="list-disc pl-5 text-xs text-smoke-gray flex flex-col gap-2 leading-relaxed font-mono">
               <li><strong>Execution Pipeline</strong>: Defined thread states (FETCH, DECODE, EXECUTE, MEM_REQ, MEM_WAIT) and warp-level SIMD synchronization.</li>
               <li><strong>Register Files</strong>: Modeled 16 virtual registers per thread, including read-only special registers like thread index, block index, and block dimensions.</li>
-              <li><strong>Memory Controllers</strong>: Implemented an asynchronous off-chip global memory DRAM simulator with 4-cycle latencies and bandwidth limits.</li>
+              <li><strong>Memory Controllers</strong>: Implemented an asynchronous off-chip global memory DRAM implementation with 4-cycle latencies and bandwidth limits.</li>
               <li><strong>Shared SRAM</strong>: Formulated local block-level shared memory with 0-cycle latency access.</li>
               <li><strong>Tracer Logs</strong>: Programmed a cycle-by-cycle terminal logger outputting execution telemetry.</li>
             </ul>
@@ -170,7 +170,7 @@ export default function Home() {
 
           {/* Subtitle */}
           <p className="text-xs sm:text-sm md:text-base text-steel-gray max-w-2xl leading-relaxed mt-4 sm:mt-6 font-mono">
-            A cycle-accurate hardware simulator and compiler pipeline written in Go. Study parallel scheduling logic, thread SIMD lanes, active mask divergence, and off-chip memory latencies cycle-by-cycle.
+            A cycle-accurate GPU implementation and compiler pipeline written in Go. Study parallel scheduling logic, thread SIMD lanes, active mask divergence, and off-chip memory latencies cycle-by-cycle.
           </p>
 
           {/* Action Row */}
@@ -394,7 +394,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="w-full border-t border-stone-gray pt-6 mt-12 pb-8 text-center text-xs font-mono text-smoke-gray flex flex-col md:flex-row justify-between gap-4 max-w-[1280px] mx-auto px-6">
-        <span>NYX GPU SIMULATOR // AN OPEN SOURCE HARDWARE RESEARCH STUDY</span>
+        <span>NYX GPU IMPLEMENTATION // AN OPEN SOURCE HARDWARE RESEARCH STUDY</span>
         <span>COPYRIGHT © 2026 SURYAKANT SUBUDHI. ALL SPECIFICATIONS ARE OPEN SOURCE.</span>
       </footer>
     </div>

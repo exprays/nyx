@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "NYX // Building a GPU from Scratch",
-  description: "A cycle-accurate GPU simulator written in Go and an architectural study of parallel computing.",
+  description: "A cycle-accurate GPU implementation written in Go and an architectural study of parallel computing.",
 };
 
 export default function RootLayout({
