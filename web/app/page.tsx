@@ -43,7 +43,7 @@ function ChangelogSection() {
               <li><strong>Register Files</strong>: Modeled 16 virtual registers per thread, including read-only special registers like thread index, block index, and block dimensions.</li>
               <li><strong>Memory Controllers</strong>: Implemented an asynchronous off-chip global memory DRAM simulator with 4-cycle latencies and bandwidth limits.</li>
               <li><strong>Shared SRAM</strong>: Formulated local block-level shared memory with 0-cycle latency access.</li>
-              <li><strong>Tracer Logs</strong>: Programmed a cycle-by-cycle terminal logger outputting simulation telemetry.</li>
+              <li><strong>Tracer Logs</strong>: Programmed a cycle-by-cycle terminal logger outputting execution telemetry.</li>
             </ul>
           </div>
         </div>
@@ -105,7 +105,8 @@ export default function Home() {
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
 
           {/* Logo brand */}
-          <div className="flex items-center gap-2 sm:gap-4 whitespace-nowrap">
+          <div className="flex items-center gap-2 sm:gap-3 whitespace-nowrap">
+            <img src="/logo.svg" alt="NYX Logo" className="h-6 w-6 select-none" />
             <span className="font-sans font-bold text-base sm:text-lg md:text-xl text-ash-black tracking-tighter">
               Project NYX
             </span>
@@ -117,10 +118,10 @@ export default function Home() {
           {/* Nav Items (Naked Link style - Hidden on mobile/tablet to avoid overflow) */}
           <nav className="hidden md:flex items-center gap-6 text-sm font-semibold">
             <Link
-              href="/playground"
-              className="text-flame-orange hover:text-midnight-graphite transition-colors py-1.5 font-sans font-bold"
+              href="/blog"
+              className="text-flame-orange hover:text-electric-blue transition-colors py-1.5 font-sans"
             >
-              PLAYGROUND
+              LEARN
             </Link>
             <button
               onClick={() => {
@@ -159,11 +160,11 @@ export default function Home() {
           {/* Status Tag Badge */}
           <div className="inline-flex items-center gap-2 border border-stone-gray px-3 py-1 text-xs text-smoke-gray uppercase tracking-wider mb-6 bg-white font-mono">
             <span className="inline-block w-2 h-2 bg-verdant-green rounded-full"></span>
-            <span>Architecture wired: stable</span>
+            <span>Architecture wired: Alpha</span>
           </div>
 
           {/* Main Headline */}
-          <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter text-ash-black max-w-4xl leading-[1.08] uppercase font-sans break-words">
+          <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter text-ash-black max-w-4xl leading-[1.08] font-sans break-words">
             Building a GPU from the ground up.
           </h1>
 
@@ -182,15 +183,12 @@ export default function Home() {
               LAUNCH PLAYGROUND
             </Link>
             {/* Naked Link Button */}
-            <button
-              onClick={() => {
-                const el = document.getElementById("changelog-section");
-                if (el) el.scrollIntoView({ behavior: "smooth" });
-              }}
+            <Link
+              href="/blog"
               className="text-electric-blue hover:underline text-xs font-bold py-3 cursor-pointer border-0 bg-transparent flex items-center gap-1 font-mono"
             >
-              View specs & changelog →
-            </button>
+              Learn how it's built →
+            </Link>
           </div>
 
           {/* GPU CAD Architectural Blueprint Diagram Box */}

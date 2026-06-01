@@ -35,7 +35,7 @@ export default function Playground() {
     }
 
     setTerminalLogs([
-      "Welcome to NYX Virtual GPU Playground.",
+      "Welcome to NYX GPU Playground.",
       "Dual-mode browser container simulation initialized.",
       "Type 'help' to see list of shell commands.",
       "Type 'make run-sim' to run the simulator."
@@ -193,9 +193,10 @@ export default function Playground() {
       <header className="h-16 shrink-0 w-full bg-cloud-white border-b border-stone-gray z-50">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 h-full flex justify-between items-center">
 
-          <div className="flex items-center gap-4">
-            <Link href="/" className="font-sans font-bold text-base sm:text-lg md:text-xl text-ash-black hover:text-electric-blue transition-colors tracking-tighter">
-              ← Project NYX
+          <div className="flex items-center gap-3">
+            <Link href="/" className="font-sans font-bold text-base sm:text-lg md:text-xl text-ash-black hover:text-electric-blue transition-colors tracking-tighter flex items-center gap-2">
+              <img src="/logo.svg" alt="NYX Logo" className="h-5 w-5 select-none" />
+              <span>Project NYX</span>
             </Link>
             <span className="text-[10px] border border-stone-gray px-2 py-0.5 text-smoke-gray hidden sm:inline-block">
               SANDBOX PLAYGROUND
@@ -227,7 +228,7 @@ export default function Playground() {
           className={`flex-1 py-3 text-xs font-bold font-sans cursor-pointer ${mobileTab === "terminal" ? "bg-white text-ash-black font-bold border-l border-stone-gray" : "bg-transparent text-smoke-gray"
             }`}
         >
-          [ TERMINAL ]
+          [ CLOUD SHELL ]
         </button>
       </div>
 
