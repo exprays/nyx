@@ -73,14 +73,14 @@ func (s *Sim) Info() {
 	total := s.Config.GridDim * s.Config.BlockDim
 	warpsPerBlock := s.Config.BlockDim / WarpSize
 	fmt.Println("╔══════════════════════════════════════════════╗")
-	fmt.Printf(" ║  NYX GPU                                      ║\n")
+	fmt.Printf("║  NYX GPU                                     ║\n")
 	fmt.Println("╠══════════════════════════════════════════════╣")
-	fmt.Printf(" ║  Kernel        : %-28s║\n", s.Config.Name)
-	fmt.Printf(" ║  Grid dim      : %-28d║\n", s.Config.GridDim)
-	fmt.Printf(" ║  Block dim     : %-28d║\n", s.Config.BlockDim)
-	fmt.Printf(" ║  Total threads : %-28d║\n", total)
-	fmt.Printf(" ║  Warps/block   : %-28d║\n", warpsPerBlock)
-	fmt.Printf(" ║  SMs           : %-28d║\n", NumSMs)
-	fmt.Printf(" ║  Program size  : %-28d║\n", len(s.Config.Program))
+	fmt.Printf("║  Kernel        : %-28s║\n", s.Config.Name)
+	fmt.Printf("║  Grid dim      : %-28d║\n", s.Config.GridDim)
+	fmt.Printf("║  Block dim     : %-28d║\n", s.Config.BlockDim)
+	fmt.Printf("║  Total threads : %-28d║\n", total)
+	fmt.Printf("║  Warps/block   : %-28d║\n", warpsPerBlock)
+	fmt.Printf("║  SMs           : %-28d║\n", NumSMs)
+	fmt.Printf("║  Program size  : %-28d║\n", len(s.Config.Program))
 	fmt.Println("╚══════════════════════════════════════════════╝")
 }
