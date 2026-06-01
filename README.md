@@ -103,7 +103,7 @@ NYX is being built in public. Each part of the project corresponds to a chapter 
 
 ## Web Playground
 
-The interactive playground at [`/playground`](https://nyx.exprays.com/playground) runs a browser-sandboxed version of the NYX simulator. You can read the source files, edit the kernel configuration, and execute `make run-sim` directly in the browser shell — powered by WebAssembly.
+The interactive playground at [`/playground`](https://nyx.exprays.com/playground) runs a browser-sandboxed version of the NYX Implementation in GO-WASM. You can read the source files, edit the kernel configuration, and execute `make run-sim` directly in the browser shell — powered by WebAssembly.
 
 ## License
 
