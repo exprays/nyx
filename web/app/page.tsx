@@ -145,8 +145,8 @@ export default function Home() {
           {/* Action button (Orange Action Button) */}
           <div className="whitespace-nowrap">
             <Link href="/playground" className="bg-flame-orange text-cloud-white text-[10px] sm:text-xs font-bold px-3 sm:px-4 py-2 hover:bg-opacity-90 cursor-pointer border-0 transition-opacity font-mono inline-block">
-              <span className="hidden sm:inline">LAUNCH PLAYGROUND</span>
-              <span className="sm:hidden">PLAYGROUND</span>
+              <span className="hidden sm:inline">LAUNCH CLOUD SHELL</span>
+              <span className="sm:hidden">CLOUD SHELL</span>
             </Link>
           </div>
 
@@ -180,7 +180,7 @@ export default function Home() {
               href="/playground"
               className="bg-midnight-graphite hover:bg-opacity-95 text-cloud-white text-xs font-bold px-6 py-3 cursor-pointer border-0 transition-opacity font-mono inline-block"
             >
-              LAUNCH PLAYGROUND
+              LAUNCH CLOUD SHELL
             </Link>
             {/* Naked Link Button */}
             <Link
@@ -392,10 +392,160 @@ export default function Home() {
         </main>
       </div>
 
-      {/* Footer */}
-      <footer className="w-full border-t border-stone-gray pt-6 mt-12 pb-8 text-center text-xs font-mono text-smoke-gray flex flex-col md:flex-row justify-between gap-4 max-w-[1280px] mx-auto px-6">
-        <span>NYX GPU IMPLEMENTATION // AN OPEN SOURCE HARDWARE RESEARCH STUDY</span>
-        <span>COPYRIGHT © 2026 SURYAKANT SUBUDHI. ALL SPECIFICATIONS ARE OPEN SOURCE.</span>
+      {/* Footer Section */}
+      <footer className="w-full mt-12 pb-16 bg-cloud-white">
+        {/* Large Outline Brand Text */}
+        <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 select-none pointer-events-none overflow-hidden">
+          <div
+            className="text-[9rem] sm:text-[13rem] md:text-[18rem] lg:text-[22rem] font-bold font-sans text-center leading-none tracking-tighter mb-[-3rem] sm:mb-[-4rem] md:mb-[-5rem]"
+            style={{
+              WebkitTextStroke: "1px rgba(115, 115, 115, 0.25)",
+              color: "transparent",
+            }}
+          >
+            NYX
+          </div>
+        </div>
+
+        {/* Footer Grid Container */}
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 md:grid-cols-12 border border-stone-gray bg-cloud-white">
+
+            {/* Left Column (Logo, Newsletter, Copyright) */}
+            <div className="md:col-span-6 p-6 flex flex-col justify-between border-b md:border-b-0 md:border-r border-stone-gray">
+              <div>
+                {/* Brand Logo & Name */}
+                <div className="flex justify-between items-start mb-6">
+                  <div className="flex items-center gap-2.5">
+                    <img src="/logo.svg" alt="NYX Logo" className="h-5 w-5 select-none" />
+                    <span className="font-sans font-bold text-base text-ash-black tracking-tight">
+                      Project NYX
+                    </span>
+                  </div>
+                  {/* Status Indicator / Small Aesthetic Accent */}
+                  <div className="flex items-center gap-1.5 text-[9px] font-mono border border-stone-gray px-2 py-0.5 text-smoke-gray uppercase">
+                    <span className="inline-block w-1.5 h-1.5 bg-flame-orange animate-pulse"></span>
+                    <span>ACTIVE</span>
+                  </div>
+                </div>
+
+                {/* Newsletter Form */}
+                <div className="mt-8 mb-6">
+                  <span className="block text-[10px] font-bold font-sans text-ash-black tracking-wider uppercase mb-2.5">
+                    GET SPEC UPDATES
+                  </span>
+                  <form
+                    onSubmit={(e) => e.preventDefault()}
+                    className="flex flex-col sm:flex-row gap-2"
+                  >
+                    <input
+                      type="email"
+                      placeholder="Enter your email"
+                      className="flex-1 bg-white border border-stone-gray px-3 py-2 text-xs font-mono text-ash-black focus:outline-none focus:border-flame-orange placeholder:text-stone-gray"
+                    />
+                    <button
+                      type="submit"
+                      className="bg-flame-orange hover:bg-opacity-95 text-cloud-white text-xs font-bold px-4 py-2 font-mono transition-opacity cursor-pointer whitespace-nowrap"
+                    >
+                      Subscribe
+                    </button>
+                  </form>
+                  <p className="text-[10px] font-mono text-smoke-gray leading-relaxed mt-3">
+                    All specifications, assembler codebases, and simulation telemetries are fully open-source and free to distribute. You can unsubscribe at any time.
+                  </p>
+                </div>
+              </div>
+
+              {/* Copyright Line */}
+              <div className="mt-8 pt-6 border-t border-stone-gray border-opacity-40 text-[11px] font-mono text-smoke-gray">
+                COPYRIGHT © 2026 SURYAKANT SUBUDHI. ALL SPECIFICATIONS ARE OPEN SOURCE.
+              </div>
+            </div>
+
+            {/* Middle Column (Links - NAVIGATION) */}
+            <div className="md:col-span-3 p-6 flex flex-col justify-between border-b md:border-b-0 md:border-r border-stone-gray">
+              <div className="flex flex-col gap-4">
+                <span className="text-[10px] font-bold font-sans text-flame-orange tracking-wider uppercase mb-2">
+                  NAVIGATION
+                </span>
+                <Link
+                  href="/blog"
+                  className="font-sans font-bold text-lg text-steel-gray hover:text-flame-orange transition-colors leading-snug"
+                >
+                  Learn
+                </Link>
+                <Link
+                  href="/blog/chapter-0"
+                  className="font-sans font-bold text-lg text-steel-gray hover:text-flame-orange transition-colors leading-snug"
+                >
+                  Chapter 0
+                </Link>
+                <Link
+                  href="/playground"
+                  className="font-sans font-bold text-lg text-steel-gray hover:text-flame-orange transition-colors leading-snug"
+                >
+                  Cloud Playground
+                </Link>
+                <button
+                  onClick={() => {
+                    const el = document.getElementById("changelog-section");
+                    if (el) el.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  className="font-sans font-bold text-lg text-steel-gray hover:text-flame-orange transition-colors leading-snug text-left cursor-pointer"
+                >
+                  Changelog Section
+                </button>
+              </div>
+
+              {/* Secondary Detail Text */}
+              <div className="mt-8 pt-6 border-t border-stone-gray border-opacity-40 text-[10px] font-mono text-smoke-gray uppercase tracking-wider">
+                CORE // SPEC_VERSION: v0.1.0
+              </div>
+            </div>
+
+            {/* Right Column (Links - EXTERNAL) */}
+            <div className="md:col-span-3 p-6 flex flex-col justify-between">
+              <div className="flex flex-col gap-4">
+                <span className="text-[10px] font-bold font-sans text-flame-orange tracking-wider uppercase mb-2">
+                  DEVELOPMENT
+                </span>
+                <a
+                  href="https://github.com/exprays/nyx"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-sans font-bold text-lg text-steel-gray hover:text-flame-orange transition-colors leading-snug"
+                >
+                  GitHub Repository
+                </a>
+                <a
+                  href="https://github.com/exprays/nyx/blob/main/LICENSE"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-sans font-bold text-lg text-steel-gray hover:text-flame-orange transition-colors leading-snug"
+                >
+                  MIT License
+                </a>
+                <a
+                  href="https://github.com/exprays/nyx/issues"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-sans font-bold text-lg text-steel-gray hover:text-flame-orange transition-colors leading-snug"
+                >
+                  Report Issue
+                </a>
+                <span className="font-sans font-bold text-lg text-smoke-gray opacity-60 leading-snug select-none">
+                  #ProjectNyx
+                </span>
+              </div>
+
+              {/* Secondary Detail Text */}
+              <div className="mt-8 pt-6 border-t border-stone-gray border-opacity-40 text-[10px] font-mono text-smoke-gray uppercase tracking-wider">
+                LICENSE // MIT_APPROVED
+              </div>
+            </div>
+
+          </div>
+        </div>
       </footer>
     </div>
   );

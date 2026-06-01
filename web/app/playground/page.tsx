@@ -35,7 +35,7 @@ export default function Playground() {
     }
 
     setTerminalLogs([
-      "Welcome to NYX GPU Playground.",
+      "Welcome to NYX GPU Cloud Shell.",
       "Dual-mode browser container simulation initialized.",
       "Type 'help' to see list of shell commands.",
       "Type 'make run-sim' to run the simulator."
@@ -199,7 +199,7 @@ export default function Playground() {
               <span>Project NYX</span>
             </Link>
             <span className="text-[10px] border border-stone-gray px-2 py-0.5 text-smoke-gray hidden sm:inline-block">
-              SANDBOX PLAYGROUND
+              CLOUD SHELL
             </span>
           </div>
 
