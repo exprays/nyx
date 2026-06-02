@@ -69,7 +69,7 @@ cd nyx
 make setup
 
 # Run the Go simulator in the terminal
-make run-sim
+make run-impl
 
 # Launch the interactive web playground (localhost:3000)
 make run-web
@@ -79,7 +79,7 @@ make run-web
 
 ```bash
 make setup       # Install all Go and Node dependencies
-make run-sim     # Run the Go simulator in the terminal
+make run-impl     # Run the Go simulator in the terminal
 make run-web     # Start the Next.js dev server at localhost:3000
 make build       # Build the Go binary + Next.js production bundle
 make build-wasm  # Compile the Go simulator to browser WebAssembly
@@ -103,7 +103,7 @@ NYX is being built in public. Each part of the project corresponds to a chapter 
 
 ## Web Playground
 
-The interactive playground at [`/playground`](https://nyx.exprays.com/playground) runs a browser-sandboxed version of the NYX Implementation in GO-WASM. You can read the source files, edit the kernel configuration, and execute `make run-sim` directly in the browser shell — powered by WebAssembly.
+The interactive playground at [`/playground`](https://nyx.exprays.com/playground) runs a browser-sandboxed version of the NYX Implementation in GO-WASM. You can read the source files, edit the kernel configuration, and execute `make run-impl` directly in the browser shell — powered by WebAssembly.
 
 ## License
 

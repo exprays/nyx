@@ -1,4 +1,4 @@
-.PHONY: all setup install build build-wasm run-sim run-web test clean help
+.PHONY: all setup install build build-wasm run-impl run-web test clean help
 
 all: help
 
@@ -7,7 +7,7 @@ help:
 	@echo "  make setup      - Install dependencies for backend and frontend"
 	@echo "  make build      - Build both the Go backend and Next.js frontend"
 	@echo "  make build-wasm - Compile Go simulator package to browser WebAssembly"
-	@echo "  make run-sim    - Run the Go simulator"
+	@echo "  make run-impl   - Run the Go simulator"
 	@echo "  make run-web    - Run the Next.js dev server"
 	@echo "  make test       - Run tests for Go backend"
 	@echo "  make clean      - Clean build artifacts"
@@ -31,7 +31,7 @@ build: build-wasm
 	@echo "Building Web frontend..."
 	cd web && npm run build
 
-run-sim:
+run-impl:
 	@echo "Running Go simulator..."
 	cd impl/nyx && go run main.go
 

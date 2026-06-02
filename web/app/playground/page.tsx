@@ -36,9 +36,9 @@ export default function Playground() {
 
     setTerminalLogs([
       "Welcome to NYX GPU Cloud Shell.",
-      "Dual-mode browser container simulation initialized.",
+      "WASM broswer container initialized.",
       "Type 'help' to see list of shell commands.",
-      "Type 'make run-sim' to run the simulator."
+      "Type 'make run-impl' to run the GPU implementation."
     ]);
   }, []);
 
@@ -69,7 +69,7 @@ export default function Playground() {
 
     setMobileTab("terminal");
 
-    const commandText = triggerSource || "make run-sim";
+    const commandText = triggerSource || "make run-impl";
     setTerminalLogs((prev) => [
       ...prev,
       `nyx-sandbox:~$ ${commandText}`,
@@ -153,7 +153,7 @@ export default function Playground() {
 
     switch (command) {
       case "help":
-        response.push("Available: ls, cat <file>, make run-sim, clear, help");
+        response.push("Available: ls, cat <file>, make run-impl, clear, help");
         break;
       case "ls":
         response.push("main.go  config.json  Makefile  sim/  core/  isa/  memory/  trace/  go.mod");
@@ -167,8 +167,8 @@ export default function Playground() {
         else response.push(`cat: ${target}: No such file`);
         break;
       case "make":
-        if (target === "run-sim") {
-          runSimulatorWasm("make run-sim");
+        if (target === "run-impl") {
+          runSimulatorWasm("make run-impl");
           setCommandInput("");
           return;
         }

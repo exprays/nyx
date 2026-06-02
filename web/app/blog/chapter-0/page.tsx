@@ -9,7 +9,7 @@ export const metadata = {
 export default function ChapterZeroPage() {
   return (
     <div className="min-h-screen bg-cloud-white text-steel-gray font-mono flex flex-col select-none selection:bg-electric-blue selection:text-cloud-white overflow-x-hidden">
-      
+
       {/* Top Banner (Flame Orange Banner consistent with home) */}
       <div className="w-full bg-flame-orange text-cloud-white text-[10px] sm:text-xs py-2.5 px-4 text-center font-bold tracking-tight border-b border-midnight-graphite font-mono">
         NYX ARCHITECTURE CURRICULUM CHAPTER 0 IS NOW LIVE.
@@ -18,7 +18,7 @@ export default function ChapterZeroPage() {
       {/* Navigation Header */}
       <header className="w-full bg-cloud-white border-b border-stone-gray sticky top-0 z-50">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
-          
+
           {/* Logo brand */}
           <div className="flex items-center gap-2 sm:gap-3 whitespace-nowrap">
             <Link href="/" className="font-sans font-bold text-base sm:text-lg md:text-xl text-ash-black hover:text-electric-blue transition-colors tracking-tighter flex items-center gap-2">
@@ -72,7 +72,7 @@ export default function ChapterZeroPage() {
 
       {/* Main Content Layout */}
       <main className="flex-1 w-full max-w-[1280px] mx-auto px-4 sm:px-6 py-10 sm:py-16 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
+
         {/* Left Sidebar (Article Outline - Hidden on mobile/tablet) */}
         <aside className="hidden lg:block lg:col-span-3 border border-stone-gray p-4 bg-cloud-white sticky top-24">
           <div className="border-b border-steel-gray pb-2 mb-3">
@@ -131,7 +131,7 @@ export default function ChapterZeroPage() {
 
         {/* Central Article Column */}
         <article className="col-span-1 lg:col-span-9 bg-white border border-stone-gray p-6 sm:p-10 md:p-12 shadow-sm">
-          
+
           {/* Article Header Meta */}
           <div className="border-b border-stone-gray pb-6 mb-8 flex flex-col gap-3">
             <div className="flex items-center gap-3">
@@ -177,10 +177,10 @@ export default function ChapterZeroPage() {
           {/* Illustration 1 Container */}
           <div id="die-layout" className="border border-stone-gray p-3 sm:p-4 my-8 bg-cloud-white flex flex-col items-center scroll-mt-24">
             <div className="w-full flex justify-center bg-white border border-stone-gray p-2 overflow-hidden">
-              <img 
-                src="/blog/image1-part0.png" 
-                alt="CPU vs GPU die layout" 
-                className="max-w-full h-auto select-none" 
+              <img
+                src="/blog/image1-part0.png"
+                alt="CPU vs GPU die layout"
+                className="max-w-full h-auto select-none"
               />
             </div>
             <span className="text-[10px] sm:text-xs font-mono font-bold text-midnight-graphite uppercase tracking-wider mt-3 text-center">
@@ -227,10 +227,10 @@ export default function ChapterZeroPage() {
           {/* Illustration 2 Container */}
           <div id="hierarchy-diagram" className="border border-stone-gray p-3 sm:p-4 my-8 bg-cloud-white flex flex-col items-center scroll-mt-24">
             <div className="w-full flex justify-center bg-white border border-stone-gray p-2 overflow-hidden">
-              <img 
-                src="/blog/image2-part0.png" 
-                alt="Thread / Block / Grid hierarchy" 
-                className="max-w-full h-auto select-none" 
+              <img
+                src="/blog/image2-part0.png"
+                alt="Thread / Block / Grid hierarchy"
+                className="max-w-full h-auto select-none"
               />
             </div>
             <span className="text-[10px] sm:text-xs font-mono font-bold text-midnight-graphite uppercase tracking-wider mt-3 text-center">
@@ -263,10 +263,10 @@ export default function ChapterZeroPage() {
           {/* Illustration 3 Container */}
           <div id="warp-divergence" className="border border-stone-gray p-3 sm:p-4 my-8 bg-cloud-white flex flex-col items-center scroll-mt-24">
             <div className="w-full flex justify-center bg-white border border-stone-gray p-2 overflow-hidden">
-              <img 
-                src="/blog/image3-part0.png" 
-                alt="Warp divergence" 
-                className="max-w-full h-auto select-none" 
+              <img
+                src="/blog/image3-part0.png"
+                alt="Warp divergence"
+                className="max-w-full h-auto select-none"
               />
             </div>
             <span className="text-[10px] sm:text-xs font-mono font-bold text-midnight-graphite uppercase tracking-wider mt-3 text-center">
@@ -308,10 +308,10 @@ export default function ChapterZeroPage() {
           {/* Illustration 4 Container */}
           <div id="block-diagram" className="border border-stone-gray p-3 sm:p-4 my-8 bg-cloud-white flex flex-col items-center scroll-mt-24">
             <div className="w-full flex justify-center bg-white border border-stone-gray p-2 overflow-hidden">
-              <img 
-                src="/blog/image4-part0.png" 
-                alt="NYX full architecture block diagram" 
-                className="max-w-full h-auto select-none" 
+              <img
+                src="/blog/image4-part0.png"
+                alt="NYX full architecture block diagram"
+                className="max-w-full h-auto select-none"
               />
             </div>
             <span className="text-[10px] sm:text-xs font-mono font-bold text-midnight-graphite uppercase tracking-wider mt-3 text-center">
@@ -328,7 +328,7 @@ export default function ChapterZeroPage() {
               What I built in Part 0
             </h2>
             <p className="font-mono text-xs sm:text-sm text-steel-gray leading-relaxed mb-4">
-              I completed wiring up the foundation of the GPU pipeline simulation:
+              I completed wiring up the foundation of the GPU pipeline implementation:
             </p>
             <ul className="list-disc pl-6 mb-6 flex flex-col gap-2.5 font-mono text-xs sm:text-sm text-steel-gray leading-relaxed">
               <li>

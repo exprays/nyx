@@ -451,7 +451,7 @@ export default function Home() {
                     </button>
                   </form>
                   <p className="text-[10px] font-mono text-smoke-gray leading-relaxed mt-3">
-                    All specifications, assembler codebases, and simulation telemetries are fully open-source and free to distribute. You can unsubscribe at any time.
+                    All specifications, assembler codebases, and telemetries are fully open-source and free to distribute. You can unsubscribe at any time.
                   </p>
                 </div>
               </div>
