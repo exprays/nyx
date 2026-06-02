@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 
 // Project Changelog Component (Refactored for PlanetScale Monochrome theme with Sans/Mono fonts)
@@ -82,6 +82,12 @@ function ChangelogSection() {
 }
 
 export default function Home() {
+  const [newsletterMsg, setNewsletterMsg] = useState("");
+
+  function handleSubscribe(e: React.FormEvent) {
+    e.preventDefault();
+    setNewsletterMsg("Newsletter will be available soon.");
+  }
   return (
     <div className="min-h-screen bg-cloud-white text-steel-gray font-mono flex flex-col select-none selection:bg-electric-blue selection:text-cloud-white overflow-x-hidden">
 
@@ -435,7 +441,7 @@ export default function Home() {
                     GET SPEC UPDATES
                   </span>
                   <form
-                    onSubmit={(e) => e.preventDefault()}
+                    onSubmit={handleSubscribe}
                     className="flex flex-col sm:flex-row gap-2"
                   >
                     <input
@@ -450,6 +456,9 @@ export default function Home() {
                       Subscribe
                     </button>
                   </form>
+                  {newsletterMsg && (
+                    <p className="text-[10px] text-flame-orange mt-2">{newsletterMsg}</p>
+                  )}
                   <p className="text-[10px] font-mono text-smoke-gray leading-relaxed mt-3">
                     All specifications, assembler codebases, and telemetries are fully open-source and free to distribute. You can unsubscribe at any time.
                   </p>
