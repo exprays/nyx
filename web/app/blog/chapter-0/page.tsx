@@ -123,7 +123,7 @@ export default function ChapterZeroPage() {
             </li>
             <li>
               <a href="#what-we-built" className="hover:text-ash-black block transition-colors">
-                05. What I built in Part 0
+                05. What I built in Chapter 0
               </a>
             </li>
           </ul>
@@ -297,10 +297,10 @@ export default function ChapterZeroPage() {
                 <strong className="text-ash-black">NYX ISA</strong>: 13 instructions. Arithmetic (ADD/SUB/MUL/DIV), comparison (CMP + BRnzp), memory (LDR/STR/LDSH/STSH), immediate (CONST), and control (SYNC/RET).
               </li>
               <li>
-                <strong className="text-ash-black">NYX assembler</strong>: <code className="bg-cloud-white border border-stone-gray px-1 py-0.5 text-flame-orange text-[11px]">.nyx</code> source files parsed and compiled directly to instruction structs. Written in Go in Part 1.
+                <strong className="text-ash-black">NYX assembler</strong>: <code className="bg-cloud-white border border-stone-gray px-1 py-0.5 text-flame-orange text-[11px]">.nyx</code> source files parsed and compiled directly to instruction structs. Written in Go in Chapter 1.
               </li>
               <li>
-                <strong className="text-ash-black">NYX runtime</strong>: <code className="bg-cloud-white border border-stone-gray px-1 py-0.5 text-electric-blue text-[11px]">nyx.Launch(kernel, grid, block, mem)</code> API mimicking CUDA launch syntax. Built in Part 6.
+                <strong className="text-ash-black">NYX runtime</strong>: <code className="bg-cloud-white border border-stone-gray px-1 py-0.5 text-electric-blue text-[11px]">nyx.Launch(kernel, grid, block, mem)</code> API mimicking CUDA launch syntax. Built in Chapter 6.
               </li>
             </ul>
           </section>
@@ -322,10 +322,10 @@ export default function ChapterZeroPage() {
             </p>
           </div>
 
-          {/* Section: What I built in Part 0 */}
+          {/* Section: What I built in Chapter 0 */}
           <section id="what-we-built" className="scroll-mt-24">
             <h2 className="font-sans font-bold text-lg sm:text-xl text-ash-black uppercase tracking-tight border-b border-stone-gray pb-2 mt-10 mb-4">
-              What I built in Part 0
+              What I built in Chapter 0
             </h2>
             <p className="font-mono text-xs sm:text-sm text-steel-gray leading-relaxed mb-4">
               I completed wiring up the foundation of the GPU pipeline implementation:
@@ -351,15 +351,15 @@ export default function ChapterZeroPage() {
               </li>
             </ul>
             <p className="font-mono text-xs sm:text-sm text-steel-gray leading-relaxed mt-6 border-t border-stone-gray pt-4">
-              <strong className="text-midnight-graphite">Next up — Part 1</strong>: I design the binary instruction encoding bitfields and build the custom assembler compiler in Go translating text instructions into execute-ready byte streams. I'll assemble my first program and watch SMs schedule warps in parallel.
+              <strong className="text-midnight-graphite">Next up — Chapter 1</strong>: I design the binary instruction encoding bitfields and build the custom assembler compiler in Go translating text instructions into execute-ready byte streams. I'll assemble my first program and watch SMs schedule warps in parallel.
             </p>
           </section>
 
-          <div className="border-t border-stone-gray pt-6 mt-8 flex justify-between items-center">
-            <Link href="/blog" className="text-xs font-bold font-mono text-electric-blue hover:underline">
+          <div className="border-t border-stone-gray pt-6 mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <Link href="/blog" className="text-xs font-bold font-mono text-electric-blue hover:underline whitespace-nowrap">
               ← BACK TO BLOG INDEX
             </Link>
-            <Link href="/playground" className="text-xs font-bold font-mono bg-midnight-graphite text-white px-4 py-2 hover:bg-opacity-95">
+            <Link href="/playground" className="text-xs font-bold font-mono bg-midnight-graphite text-white px-4 py-2 hover:bg-opacity-95 whitespace-nowrap text-center">
               TRY PLAYGROUND →
             </Link>
           </div>
