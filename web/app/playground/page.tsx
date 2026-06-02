@@ -37,7 +37,7 @@ export default function Playground() {
     setTerminalLogs([
       "Welcome to NYX GPU Cloud Shell.",
       "WASM broswer container initialized.",
-      "Type 'help' to see list of shell commands.",
+      "Type 'help' to see available shell commands.",
       "Type 'make run-impl' to run the GPU implementation."
     ]);
   }, []);
