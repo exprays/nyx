@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { LikesDisplay } from "../components/LikesDisplay";
 
 export const metadata = {
   title: "Engineering Curriculum & Blog | Project NYX",
@@ -107,8 +108,8 @@ export default function BlogIndexPage() {
             </p>
 
             <div className="flex items-center justify-between mt-2 pt-2 border-t border-stone-gray border-opacity-30">
-              <span className="text-[11px] font-mono text-smoke-gray uppercase tracking-wider">
-                8 MIN READ • BY SURYAKANT SUBUDHI
+              <span className="text-[11px] font-mono text-smoke-gray uppercase tracking-wider flex items-center gap-1.5">
+                8 MIN READ • BY SURYAKANT SUBUDHI • <LikesDisplay slug="chapter-0" />
               </span>
               <Link
                 href="/blog/chapter-0"

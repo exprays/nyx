@@ -145,8 +145,8 @@ export default function Home() {
           {/* Action button (Orange Action Button) */}
           <div className="whitespace-nowrap">
             <Link href="/playground" className="bg-flame-orange text-cloud-white text-[10px] sm:text-xs font-bold px-3 sm:px-4 py-2 hover:bg-opacity-90 cursor-pointer border-0 transition-opacity font-mono inline-block">
-              <span className="hidden sm:inline">LAUNCH CLOUD SHELL</span>
-              <span className="sm:hidden">CLOUD SHELL</span>
+              <span className="hidden sm:inline">LAUNCH PLAYGROUND</span>
+              <span className="sm:hidden">PLAYGROUND</span>
             </Link>
           </div>
 
@@ -180,7 +180,7 @@ export default function Home() {
               href="/playground"
               className="bg-midnight-graphite hover:bg-opacity-95 text-cloud-white text-xs font-bold px-6 py-3 cursor-pointer border-0 transition-opacity font-mono inline-block"
             >
-              LAUNCH CLOUD SHELL
+              LAUNCH PLAYGROUND
             </Link>
             {/* Naked Link Button */}
             <Link

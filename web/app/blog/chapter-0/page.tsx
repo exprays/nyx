@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { LikeCounter } from "../../components/LikeCounter";
 
 export const metadata = {
   title: "Why CPUs and GPUs Are Fundamentally Different | Project NYX",
@@ -354,6 +355,8 @@ export default function ChapterZeroPage() {
               <strong className="text-midnight-graphite">Next up — Chapter 1</strong>: I design the binary instruction encoding bitfields and build the custom assembler compiler in Go translating text instructions into execute-ready byte streams. I'll assemble my first program and watch SMs schedule warps in parallel.
             </p>
           </section>
+
+          <LikeCounter slug="chapter-0" />
 
           <div className="border-t border-stone-gray pt-6 mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <Link href="/blog" className="text-xs font-bold font-mono text-electric-blue hover:underline whitespace-nowrap">
