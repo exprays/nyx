@@ -1,0 +1,28 @@
+; vecadd.nyx — vector addition kernel
+; A[i] + B[i] → C[i]  for i in 0..7
+;
+; Memory layout:
+;   [0..7]   = A
+;   [8..15]  = B
+;   [16..23] = C  (output)
+
+; i = blockIdx * blockDim + threadIdx
+MUL  R0, %blockIdx, %blockDim
+ADD  R0, R0, %threadIdx        ; R0 = global thread id = i
+
+CONST R1, #0                   ; baseA = 0
+CONST R2, #8                   ; baseB = 8
+CONST R3, #16                  ; baseC = 16
+
+ADD  R4, R1, R0                ; addr(A[i]) = baseA + i
+LDR  R4, R4                    ; R4 = A[i]
+
+ADD  R5, R2, R0                ; addr(B[i]) = baseB + i
+LDR  R5, R5                    ; R5 = B[i]
+
+ADD  R6, R4, R5                ; R6 = A[i] + B[i]
+
+ADD  R7, R3, R0                ; addr(C[i]) = baseC + i
+STR  R7, R6                    ; C[i] = R6
+
+RET

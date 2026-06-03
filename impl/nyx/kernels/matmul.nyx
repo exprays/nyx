@@ -1,0 +1,48 @@
+; matmul.nyx — 2x2 matrix multiplication
+; C = A * B
+;
+; Memory layout:
+;   [0..3]  = A (row-major: A[0][0] A[0][1] A[1][0] A[1][1])
+;   [4..7]  = B
+;   [8..11] = C (output)
+
+; i = blockIdx * blockDim + threadIdx
+MUL  R0, %blockIdx, %blockDim
+ADD  R0, R0, %threadIdx        ; R0 = i (0..3)
+
+CONST R1, #1                   ; increment
+CONST R2, #2                   ; N = 2 (matrix dimension)
+CONST R3, #0                   ; baseA
+CONST R4, #4                   ; baseB
+CONST R5, #8                   ; baseC
+
+DIV  R6, R0, R2                ; row = i / N
+MUL  R7, R6, R2
+SUB  R7, R0, R7                ; col = i % N  (= i - row*N)
+
+CONST R8, #0                   ; acc = 0
+CONST R9, #0                   ; k = 0
+
+LOOP:
+    MUL  R10, R6, R2
+    ADD  R10, R10, R9
+    ADD  R10, R10, R3          ; addr(A[row][k]) = row*N + k + baseA
+    LDR  R10, R10              ; R10 = A[row][k]
+
+    MUL  R11, R9, R2
+    ADD  R11, R11, R7
+    ADD  R11, R11, R4          ; addr(B[k][col]) = k*N + col + baseB
+    LDR  R11, R11              ; R11 = B[k][col]
+
+    MUL  R12, R10, R11
+    ADD  R8, R8, R12           ; acc += A[row][k] * B[k][col]
+
+    ADD  R9, R9, R1            ; k++
+
+    CMP  R9, R2                ; compare k with N
+    BRN  LOOP                  ; if k - N < 0 (k < N), loop
+
+ADD  R10, R5, R0               ; addr(C[i]) = baseC + i
+STR  R10, R8                   ; C[i] = acc
+
+RET
