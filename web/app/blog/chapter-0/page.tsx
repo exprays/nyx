@@ -339,7 +339,7 @@ export default function ChapterZeroPage() {
                 <code className="text-electric-blue font-bold">core/types.go</code> — defined standard hardware objects: threads, warps, blocks, SMs, and KernelConfig.
               </li>
               <li>
-                <code className="text-electric-blue font-bold">memory/memory.go</code> — simulated a global memory DRAM controller with bandwidth boundaries and 4-cycle latencies, alongside zero-cycle block shared SRAM.
+                <code className="text-electric-blue font-bold">memory/memory.go</code> — implemented a global memory DRAM controller with bandwidth boundaries and 4-cycle latencies, alongside zero-cycle block shared SRAM.
               </li>
               <li>
                 <code className="text-electric-blue font-bold">trace/trace.go</code> — designed a detailed cycle logger displaying threads state updates.

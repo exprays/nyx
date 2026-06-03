@@ -77,66 +77,67 @@ export default function Playground() {
       "Executing NYX simulator..."
     ]);
 
+    // Check if Go is loaded on the window
+    // @ts-ignore
+    if (typeof window === "undefined" || !window.Go) {
+      setTerminalLogs((prev) => [
+        ...prev,
+        "Error: WebAssembly runner (Go) not loaded yet. Please wait a moment and try again."
+      ]);
+      setIsRunning(false);
+      return;
+    }
+
+    let originalWriteSync: any = null;
+    let outputBuffer = "";
+
     try {
-      const mainCode = files["main.go"];
-      const configCode = files["config.json"];
-
-      let gridDim = 1;
-      let blockDim = 32;
-      let kernelName = "boot-check";
-      let programSize = 2;
-
-      try {
-        const parsedJson = JSON.parse(configCode);
-        if (parsedJson.gridDim !== undefined) gridDim = Number(parsedJson.gridDim);
-        if (parsedJson.blockDim !== undefined) blockDim = Number(parsedJson.blockDim);
-        if (parsedJson.name !== undefined) kernelName = String(parsedJson.name);
-      } catch (e) {
-        const gridDimMatch = mainCode.match(/GridDim:\s*(\d+)/);
-        if (gridDimMatch) gridDim = Number(gridDimMatch[1]);
-        const blockDimMatch = mainCode.match(/BlockDim:\s*(\d+)/);
-        if (blockDimMatch) blockDim = Number(blockDimMatch[1]);
-        const kernelMatch = mainCode.match(/Name:\s*"([^"]+)"/);
-        if (kernelMatch) kernelName = kernelMatch[1];
+      // Intercept fs.writeSync to capture stdout/stderr from Go
+      // @ts-ignore
+      if (globalThis.fs && globalThis.fs.writeSync) {
+        // @ts-ignore
+        originalWriteSync = globalThis.fs.writeSync;
+        // @ts-ignore
+        globalThis.fs.writeSync = (fd: number, buf: Uint8Array) => {
+          const decoder = new TextDecoder("utf-8");
+          outputBuffer += decoder.decode(buf);
+          const nl = outputBuffer.lastIndexOf("\n");
+          if (nl !== -1) {
+            const linesToLog = outputBuffer.substring(0, nl).split("\n");
+            setTerminalLogs((prev) => [...prev, ...linesToLog]);
+            outputBuffer = outputBuffer.substring(nl + 1);
+          }
+          return buf.length;
+        };
       }
 
-      if (blockDim % 32 !== 0 || blockDim === 0) {
-        setTerminalLogs((prev) => [
-          ...prev,
-          "nyx: failed to initialize: invalid kernel config: BlockDim (" + blockDim + ") must be a multiple of WarpSize (32)"
-        ]);
-        setIsRunning(false);
-        return;
+      // @ts-ignore
+      const go = new window.Go();
+      
+      const response = await fetch("/sim.wasm");
+      if (!response.ok) {
+        throw new Error(`Failed to fetch /sim.wasm: ${response.statusText}`);
       }
-
-      const instructionMatches = mainCode.match(/\{Opcode:\s*isa\.OP_\w+/g);
-      if (instructionMatches) {
-        programSize = instructionMatches.length;
+      
+      const buffer = await response.arrayBuffer();
+      const result = await WebAssembly.instantiate(buffer, go.importObject);
+      
+      // Run the Go WASM instance
+      await go.run(result.instance);
+      
+      // Flush any remaining buffered output
+      if (outputBuffer.length > 0) {
+        setTerminalLogs((prev) => [...prev, outputBuffer]);
       }
-
-      const totalThreads = gridDim * blockDim;
-      const warpsPerBlock = blockDim / 32;
-
-      const outputLines = [
-        "╔══════════════════════════════════════════════╗",
-        `║  NYX GPU                                     ║`,
-        "╠══════════════════════════════════════════════╣",
-        `║  Kernel        : ${kernelName.padEnd(28)}║`,
-        `║  Grid dim      : ${String(gridDim).padEnd(28)}║`,
-        `║  Block dim     : ${String(blockDim).padEnd(28)}║`,
-        `║  Total threads : ${String(totalThreads).padEnd(28)}║`,
-        `║  Warps/block   : ${String(warpsPerBlock).padEnd(28)}║`,
-        `║  SMs           : 4                           ║`,
-        `║  Program size  : ${String(programSize).padEnd(28)}║`,
-        "╚══════════════════════════════════════════════╝",
-        "",
-        "SPR-NYX-0 complete — architecture wired up."
-      ];
-
-      setTerminalLogs((prev) => [...prev, ...outputLines]);
     } catch (error: any) {
-      setTerminalLogs((prev) => [...prev, `nyx: build failed: ${error.message}`]);
+      setTerminalLogs((prev) => [...prev, `nyx: run failed: ${error.message}`]);
     } finally {
+      // Restore original writeSync
+      // @ts-ignore
+      if (originalWriteSync && globalThis.fs) {
+        // @ts-ignore
+        globalThis.fs.writeSync = originalWriteSync;
+      }
       setIsRunning(false);
     }
   };
@@ -244,24 +245,51 @@ export default function Playground() {
             <div className="flex flex-col gap-1 p-2 overflow-y-auto">
               <button
                 onClick={() => setActiveFile("main.go")}
-                className={`text-left text-xs px-3 py-1.5 font-mono ${activeFile === "main.go" ? "bg-stone-gray font-bold text-ash-black" : "text-steel-gray hover:bg-white"
+                className={`flex items-center gap-1.5 w-full whitespace-nowrap text-left text-xs px-3 py-1.5 font-mono ${activeFile === "main.go" ? "bg-stone-gray font-bold text-ash-black" : "text-steel-gray hover:bg-white"
                   }`}
               >
-                📄 main.go
+                <span>📄</span>
+                <span className="truncate">main.go</span>
               </button>
               <button
                 onClick={() => setActiveFile("config.json")}
-                className={`text-left text-xs px-3 py-1.5 font-mono ${activeFile === "config.json" ? "bg-stone-gray font-bold text-ash-black" : "text-steel-gray hover:bg-white"
+                className={`flex items-center gap-1.5 w-full whitespace-nowrap text-left text-xs px-3 py-1.5 font-mono ${activeFile === "config.json" ? "bg-stone-gray font-bold text-ash-black" : "text-steel-gray hover:bg-white"
                   }`}
               >
-                ⚙️ config.json
+                <span>⚙️</span>
+                <span className="truncate">config.json</span>
               </button>
               <button
                 onClick={() => setActiveFile("Makefile")}
-                className={`text-left text-xs px-3 py-1.5 font-mono ${activeFile === "Makefile" ? "bg-stone-gray font-bold text-ash-black" : "text-steel-gray hover:bg-white"
+                className={`flex items-center gap-1.5 w-full whitespace-nowrap text-left text-xs px-3 py-1.5 font-mono ${activeFile === "Makefile" ? "bg-stone-gray font-bold text-ash-black" : "text-steel-gray hover:bg-white"
                   }`}
               >
-                📄 Makefile
+                <span>📄</span>
+                <span className="truncate">Makefile</span>
+              </button>
+
+              <div className="border-t border-stone-gray my-2 pt-2 shrink-0">
+                <span className="text-[10px] font-sans font-bold text-smoke-gray px-3 block uppercase">
+                  KERNELS (READ-ONLY)
+                </span>
+              </div>
+              <button
+                onClick={() => setActiveFile("kernels/vecadd.nyx")}
+                className={`flex items-center gap-1.5 w-full whitespace-nowrap text-left text-xs px-3 py-1.5 font-mono ${activeFile === "kernels/vecadd.nyx" ? "bg-stone-gray font-bold text-ash-black" : "text-smoke-gray hover:bg-white"
+                  }`}
+              >
+                <span>📄</span>
+                <span className="truncate">kernels/vecadd.nyx</span>
+                <span className="text-[8px] text-flame-orange border border-flame-orange px-1.5 py-0.5 ml-auto font-sans font-bold select-none bg-white">NEW</span>
+              </button>
+              <button
+                onClick={() => setActiveFile("kernels/matmul.nyx")}
+                className={`flex items-center gap-1.5 w-full whitespace-nowrap text-left text-xs px-3 py-1.5 font-mono ${activeFile === "kernels/matmul.nyx" ? "bg-stone-gray font-bold text-ash-black" : "text-smoke-gray hover:bg-white"
+                  }`}
+              >
+                <span>📄</span>
+                <span className="truncate">kernels/matmul.nyx</span>
+                <span className="text-[8px] text-flame-orange border border-flame-orange px-1.5 py-0.5 ml-auto font-sans font-bold select-none bg-white">NEW</span>
               </button>
 
               <div className="border-t border-stone-gray my-2 pt-2 shrink-0">
@@ -271,45 +299,69 @@ export default function Playground() {
               </div>
               <button
                 onClick={() => setActiveFile("sim/sim.go")}
-                className={`text-left text-xs px-3 py-1.5 font-mono ${activeFile === "sim/sim.go" ? "bg-stone-gray font-bold text-ash-black" : "text-smoke-gray hover:bg-white"
+                className={`flex items-center gap-1.5 w-full whitespace-nowrap text-left text-xs px-3 py-1.5 font-mono ${activeFile === "sim/sim.go" ? "bg-stone-gray font-bold text-ash-black" : "text-smoke-gray hover:bg-white"
                   }`}
               >
-                📁 sim/sim.go
+                <span>📁</span>
+                <span className="truncate">sim/sim.go</span>
               </button>
               <button
                 onClick={() => setActiveFile("core/types.go")}
-                className={`text-left text-xs px-3 py-1.5 font-mono ${activeFile === "core/types.go" ? "bg-stone-gray font-bold text-ash-black" : "text-smoke-gray hover:bg-white"
+                className={`flex items-center gap-1.5 w-full whitespace-nowrap text-left text-xs px-3 py-1.5 font-mono ${activeFile === "core/types.go" ? "bg-stone-gray font-bold text-ash-black" : "text-smoke-gray hover:bg-white"
                   }`}
               >
-                📁 core/types.go
+                <span>📁</span>
+                <span className="truncate">core/types.go</span>
               </button>
               <button
                 onClick={() => setActiveFile("isa/isa.go")}
-                className={`text-left text-xs px-3 py-1.5 font-mono ${activeFile === "isa/isa.go" ? "bg-stone-gray font-bold text-ash-black" : "text-smoke-gray hover:bg-white"
+                className={`flex items-center gap-1.5 w-full whitespace-nowrap text-left text-xs px-3 py-1.5 font-mono ${activeFile === "isa/isa.go" ? "bg-stone-gray font-bold text-ash-black" : "text-smoke-gray hover:bg-white"
                   }`}
               >
-                📁 isa/isa.go
+                <span>📁</span>
+                <span className="truncate">isa/isa.go</span>
+              </button>
+              <button
+                onClick={() => setActiveFile("isa/encoding.go")}
+                className={`flex items-center gap-1.5 w-full whitespace-nowrap text-left text-xs px-3 py-1.5 font-mono ${activeFile === "isa/encoding.go" ? "bg-stone-gray font-bold text-ash-black" : "text-smoke-gray hover:bg-white"
+                  }`}
+              >
+                <span>📁</span>
+                <span className="truncate">isa/encoding.go</span>
+                <span className="text-[8px] text-flame-orange border border-flame-orange px-1.5 py-0.5 ml-auto font-sans font-bold select-none bg-white">NEW</span>
+              </button>
+              <button
+                onClick={() => setActiveFile("asm/assembler.go")}
+                className={`flex items-center gap-1.5 w-full whitespace-nowrap text-left text-xs px-3 py-1.5 font-mono ${activeFile === "asm/assembler.go" ? "bg-stone-gray font-bold text-ash-black" : "text-smoke-gray hover:bg-white"
+                  }`}
+              >
+                <span>📁</span>
+                <span className="truncate">asm/assembler.go</span>
+                <span className="text-[8px] text-flame-orange border border-flame-orange px-1.5 py-0.5 ml-auto font-sans font-bold select-none bg-white">NEW</span>
               </button>
               <button
                 onClick={() => setActiveFile("memory/memory.go")}
-                className={`text-left text-xs px-3 py-1.5 font-mono ${activeFile === "memory/memory.go" ? "bg-stone-gray font-bold text-ash-black" : "text-smoke-gray hover:bg-white"
+                className={`flex items-center gap-1.5 w-full whitespace-nowrap text-left text-xs px-3 py-1.5 font-mono ${activeFile === "memory/memory.go" ? "bg-stone-gray font-bold text-ash-black" : "text-smoke-gray hover:bg-white"
                   }`}
               >
-                📁 memory/memory.go
+                <span>📁</span>
+                <span className="truncate">memory/memory.go</span>
               </button>
               <button
                 onClick={() => setActiveFile("trace/trace.go")}
-                className={`text-left text-xs px-3 py-1.5 font-mono ${activeFile === "trace/trace.go" ? "bg-stone-gray font-bold text-ash-black" : "text-smoke-gray hover:bg-white"
+                className={`flex items-center gap-1.5 w-full whitespace-nowrap text-left text-xs px-3 py-1.5 font-mono ${activeFile === "trace/trace.go" ? "bg-stone-gray font-bold text-ash-black" : "text-smoke-gray hover:bg-white"
                   }`}
               >
-                📁 trace/trace.go
+                <span>📁</span>
+                <span className="truncate">trace/trace.go</span>
               </button>
               <button
                 onClick={() => setActiveFile("go.mod")}
-                className={`text-left text-xs px-3 py-1.5 font-mono ${activeFile === "go.mod" ? "bg-stone-gray font-bold text-ash-black" : "text-smoke-gray hover:bg-white"
+                className={`flex items-center gap-1.5 w-full whitespace-nowrap text-left text-xs px-3 py-1.5 font-mono ${activeFile === "go.mod" ? "bg-stone-gray font-bold text-ash-black" : "text-smoke-gray hover:bg-white"
                   }`}
               >
-                📄 go.mod
+                <span>📄</span>
+                <span className="truncate">go.mod</span>
               </button>
             </div>
           </div>
