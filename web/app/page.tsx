@@ -12,7 +12,7 @@ function ChangelogSection() {
           PROJECT SPEC & CHANGELOG
         </h2>
         <span className="text-[9px] md:text-xs bg-midnight-graphite px-2.5 py-1 text-cloud-white font-mono uppercase tracking-wider">
-          LATEST: v0.1.0
+          LATEST: v0.2.0
         </span>
       </div>
 
@@ -48,9 +48,9 @@ function ChangelogSection() {
           </div>
         </div>
 
-        {/* Release 2 (v0.2.0 - Planned) */}
-        <div className="border border-stone-gray bg-cloud-white bg-opacity-70 p-4 sm:p-6 flex flex-col gap-4 border-dashed">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-gray pb-3 opacity-60">
+        {/* Release 2 (v0.2.0) */}
+        <div className="border border-stone-gray bg-cloud-white p-4 sm:p-6 flex flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-gray pb-3">
             <div className="flex items-center gap-3">
               <span className="bg-stone-gray text-midnight-graphite border border-stone-gray px-2 py-0.5 text-xs font-mono font-bold">
                 v0.2.0
@@ -59,19 +59,47 @@ function ChangelogSection() {
                 SPR-NYX-1 // ISA Specification & Assembler
               </h3>
             </div>
+            <span className="text-xs font-mono text-smoke-gray">2026.06.03</span>
+          </div>
+
+          <p className="text-xs sm:text-sm leading-relaxed text-steel-gray font-mono">
+            We released the completed binary encoding specifications for the 32-bit Nyx ISA instruction formats, along with a custom assembler tool written in Go that translates textual assembly programs into execute-ready byte streams.
+          </p>
+
+          <div className="flex flex-col gap-2">
+            <h4 className="text-xs font-bold font-sans text-ash-black uppercase tracking-wider">Key Implementations:</h4>
+            <ul className="list-disc pl-5 text-xs text-smoke-gray flex flex-col gap-2 leading-relaxed font-mono">
+              <li><strong>ISA Encoding Formats</strong>: Structuring the exact bit positions for Opcode, Rd, Rs1, Rs2, Imm, and NZPMask values.</li>
+              <li><strong>Go Assembler Tool</strong>: Building a parser and code generator to compile text instructions into a binary representation.</li>
+              <li><strong>Validation Suite</strong>: Automated test suite to encode and decode operations to verify bitfield completeness.</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Release 3 (v0.3.0 - Planned) */}
+        <div className="border border-stone-gray bg-cloud-white bg-opacity-70 p-4 sm:p-6 flex flex-col gap-4 border-dashed">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-gray pb-3 opacity-60">
+            <div className="flex items-center gap-3">
+              <span className="bg-stone-gray text-midnight-graphite border border-stone-gray px-2 py-0.5 text-xs font-mono font-bold">
+                v0.3.0
+              </span>
+              <h3 className="font-sans font-bold text-sm md:text-base text-ash-black">
+                SPR-NYX-2 // Core Execution Engine
+              </h3>
+            </div>
             <span className="text-xs font-mono text-smoke-gray">IN PROGRESS</span>
           </div>
 
           <p className="text-xs sm:text-sm leading-relaxed text-steel-gray font-mono opacity-70">
-            Developing the binary encoding specifications for the 32-bit Nyx ISA instruction formats, along with a custom assembler tool written in Go that translates textual assembly programs into execute-ready byte streams.
+            Building the cycle-by-cycle execution engine. Modeling the thread execution state machine (FETCH, DECODE, EXECUTE, MEM_REQ, MEM_WAIT), warp scheduler instruction dispatching, and NZP register status flag updates.
           </p>
 
           <div className="flex flex-col gap-2 opacity-70">
             <h4 className="text-xs font-bold font-sans text-ash-black uppercase tracking-wider">Upcoming Features:</h4>
             <ul className="list-disc pl-5 text-xs text-smoke-gray flex flex-col gap-2 leading-relaxed font-mono">
-              <li><strong>ISA Encoding Formats</strong>: Structuring the exact bit positions for Opcode, Rd, Rs1, Rs2, Imm, and NZPMask values.</li>
-              <li><strong>Go Assembler Tool</strong>: Building a parser and code generator to compile text instructions into a binary representation.</li>
-              <li><strong>Validation Suite</strong>: Automated test suite to encode and decode operations to verify bitfield completeness.</li>
+              <li><strong>Execution State Machine</strong>: Implementing cycle transitions for FETCH, DECODE, EXECUTE, MEM_REQ, and MEM_WAIT.</li>
+              <li><strong>Warp Dispatcher</strong>: Scheduling active execution lanes under NZP masks to support branch convergence/divergence.</li>
+              <li><strong>Terminal Tracer</strong>: Enhancing cycle logging to output complete execution traces step-by-step.</li>
             </ul>
           </div>
         </div>
@@ -87,8 +115,8 @@ export default function Home() {
 
       {/* Top Banner Link (Flame Orange Update Banner) */}
       <div className="w-full bg-flame-orange text-cloud-white text-[10px] sm:text-xs py-2.5 px-4 text-center font-bold tracking-tight border-b border-midnight-graphite font-mono">
-        <span className="hidden sm:inline">NYX v0.1.0 CORE ARCHITECTURE IS LIVE. </span>
-        <span className="sm:hidden">NYX v0.1.0 LIVE: </span>
+        <span className="hidden sm:inline">NYX v0.2.0 ISA & ASSEMBLER IS LIVE. </span>
+        <span className="sm:hidden">NYX v0.2.0 LIVE: </span>
         <button
           onClick={() => {
             const el = document.getElementById("changelog-section");
@@ -111,7 +139,7 @@ export default function Home() {
               Project NYX
             </span>
             <span className="text-[10px] border border-stone-gray px-2 py-0.5 text-smoke-gray select-none hidden sm:inline-block">
-              v0.1.0-alpha
+              v0.2.0-alpha
             </span>
           </div>
 
@@ -314,11 +342,11 @@ export default function Home() {
       {/* Main Split Layout Grid */}
       <div className="max-w-[1280px] mx-auto w-full px-4 sm:px-6 py-8 sm:py-12 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
 
-        {/* Left Sidebar (Hardware Parameter Ledger) */}
+        {/* Left Sidebar (Hardware Parameters) */}
         <aside className="lg:col-span-3 border border-stone-gray p-4 bg-cloud-white flex flex-col gap-4">
           <div className="border-b border-steel-gray pb-2">
             <h3 className="font-sans text-xs font-bold tracking-tight text-ash-black uppercase">
-              LEDGER // PROJECT SPEC
+              NYX // PROJECT SPEC
             </h3>
           </div>
 
@@ -330,7 +358,7 @@ export default function Home() {
               </tr>
               <tr className="border-b border-stone-gray border-opacity-50">
                 <td className="py-2 text-smoke-gray">LATEST RELEASE</td>
-                <td className="text-right font-bold text-electric-blue">v0.1.0</td>
+                <td className="text-right font-bold text-electric-blue">v0.2.0</td>
               </tr>
               <tr className="border-b border-stone-gray border-opacity-50">
                 <td className="py-2 text-smoke-gray">GRID DIM</td>
@@ -499,7 +527,7 @@ export default function Home() {
 
               {/* Secondary Detail Text */}
               <div className="mt-8 pt-6 border-t border-stone-gray border-opacity-40 text-[10px] font-mono text-smoke-gray uppercase tracking-wider">
-                CORE // SPEC_VERSION: v0.1.0
+                CORE // SPEC_VERSION: v0.2.0
               </div>
             </div>
 

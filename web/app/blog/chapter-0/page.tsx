@@ -171,7 +171,7 @@ export default function ChapterZeroPage() {
               The key insight: most graphics and ML workloads are embarrassingly parallel. Adding two matrices? Every element is independent. Rendering pixels? Each pixel can be computed separately. You don't need smart cores for that. You need thousands of simple ones all doing the same thing at once.
             </p>
             <p className="font-mono text-xs sm:text-sm text-steel-gray leading-relaxed mb-6">
-              This is the SIMD model: <strong className="text-electric-blue font-bold">Same Instruction, Multiple Data</strong>.
+              This is the SIMD model: <strong className="text-flame-orange font-bold">Same Instruction, Multiple Data</strong>.
             </p>
           </section>
 
@@ -190,7 +190,7 @@ export default function ChapterZeroPage() {
             <p className="text-[11px] font-mono text-smoke-gray mt-1.5 max-w-2xl text-center leading-relaxed">
               <strong>Left (CPU)</strong>: 8 large squares labeled "CORE", each with sub-boxes labeled "Cache", "Branch Predictor", "OOO Engine". Most of the die area is cache. <strong>Right (GPU)</strong>: a grid of ~128 tiny squares, all identical, labeled "SM" (streaming multiprocessor). A thin strip at the top labeled "L2 Cache". A strip at the bottom labeled "Global Memory Controllers".
             </p>
-            <span className="text-[11px] font-mono text-electric-blue font-bold mt-1 text-center italic">
+            <span className="text-[11px] font-mono text-flame-orange font-bold mt-1 text-center italic">
               "A CPU optimizes for latency on a few tasks. A GPU optimizes for throughput on millions of tasks."
             </span>
           </div>
@@ -211,13 +211,13 @@ export default function ChapterZeroPage() {
             </p>
             <ul className="list-disc pl-6 mb-6 flex flex-col gap-2.5 font-mono text-xs sm:text-sm text-steel-gray leading-relaxed">
               <li>
-                <strong className="text-ash-black">Thread</strong> — the atomic unit. Runs one sequence of instructions.
+                <strong className="text-flame-orange font-bold">Thread</strong> — the atomic unit. Runs one sequence of instructions.
               </li>
               <li>
-                <strong className="text-ash-black">Block</strong> — a group of threads that share fast on-chip memory (Shared SRAM) and can synchronize with each other.
+                <strong className="text-flame-orange font-bold">Block</strong> — a group of threads that share fast on-chip memory (Shared SRAM) and can synchronize with each other.
               </li>
               <li>
-                <strong className="text-ash-black">Grid</strong> — the full collection of blocks that make up a kernel launch.
+                <strong className="text-flame-orange font-bold">Grid</strong> — the full collection of blocks that make up a kernel launch.
               </li>
             </ul>
             <p className="font-mono text-xs sm:text-sm text-steel-gray leading-relaxed mb-6">
@@ -254,7 +254,7 @@ export default function ChapterZeroPage() {
               This is where SIMD becomes real in hardware. The ALU is literally 32 lanes wide. One instruction dispatch fires all 32 lanes simultaneously.
             </p>
             <p className="font-mono text-xs sm:text-sm text-steel-gray leading-relaxed mb-4">
-              The cost of this model shows up at branches. If 16 threads in a warp evaluate <code className="bg-cloud-white border border-stone-gray px-1.5 py-0.5 text-electric-blue text-[11px]">if x &gt; 0</code> to true and 16 evaluate it to false, the warp can't split — it has to execute both branches sequentially, masking out the threads that shouldn't run each path. This is <strong className="text-ash-black">branch divergence</strong> and it's one of the main things GPU programmers optimize around.
+              The cost of this model shows up at branches. If 16 threads in a warp evaluate <code className="bg-cloud-white border border-stone-gray px-1.5 py-0.5 text-flame-orange text-[11px]">if x &gt; 0</code> to true and 16 evaluate it to false, the warp can't split — it has to execute both branches sequentially, masking out the threads that shouldn't run each path. This is <strong className="text-flame-orange font-bold">branch divergence</strong> and it's one of the main things GPU programmers optimize around.
             </p>
             <blockquote className="border-l-4 border-flame-orange bg-cloud-white p-4 my-6 font-mono text-xs sm:text-sm italic leading-relaxed text-steel-gray">
               NYX implements real warp execution with real divergence via an active mask — a 32-bit integer where each bit represents whether that thread is currently active.
@@ -295,13 +295,13 @@ export default function ChapterZeroPage() {
             </p>
             <ul className="list-disc pl-6 mb-6 flex flex-col gap-2.5 font-mono text-xs sm:text-sm text-smoke-gray leading-relaxed">
               <li>
-                <strong className="text-ash-black">NYX ISA</strong>: 13 instructions. Arithmetic (ADD/SUB/MUL/DIV), comparison (CMP + BRnzp), memory (LDR/STR/LDSH/STSH), immediate (CONST), and control (SYNC/RET).
+                <strong className="text-flame-orange font-bold">NYX ISA</strong>: 13 instructions. Arithmetic (ADD/SUB/MUL/DIV), comparison (CMP + BRnzp), memory (LDR/STR/LDSH/STSH), immediate (CONST), and control (SYNC/RET).
               </li>
               <li>
-                <strong className="text-ash-black">NYX assembler</strong>: <code className="bg-cloud-white border border-stone-gray px-1 py-0.5 text-flame-orange text-[11px]">.nyx</code> source files parsed and compiled directly to instruction structs. Written in Go in Chapter 1.
+                <strong className="text-flame-orange font-bold">NYX assembler</strong>: <code className="bg-cloud-white border border-stone-gray px-1 py-0.5 text-flame-orange text-[11px]">.nyx</code> source files parsed and compiled directly to instruction structs. Written in Go in Chapter 1.
               </li>
               <li>
-                <strong className="text-ash-black">NYX runtime</strong>: <code className="bg-cloud-white border border-stone-gray px-1 py-0.5 text-electric-blue text-[11px]">nyx.Launch(kernel, grid, block, mem)</code> API mimicking CUDA launch syntax. Built in Chapter 6.
+                <strong className="text-flame-orange font-bold">NYX runtime</strong>: <code className="bg-cloud-white border border-stone-gray px-1 py-0.5 text-flame-orange text-[11px]">nyx.Launch(kernel, grid, block, mem)</code> API mimicking CUDA launch syntax. Built in Chapter 6.
               </li>
             </ul>
           </section>
@@ -352,7 +352,11 @@ export default function ChapterZeroPage() {
               </li>
             </ul>
             <p className="font-mono text-xs sm:text-sm text-steel-gray leading-relaxed mt-6 border-t border-stone-gray pt-4">
-              <strong className="text-midnight-graphite">Next up — Chapter 1</strong>: I design the binary instruction encoding bitfields and build the custom assembler compiler in Go translating text instructions into execute-ready byte streams. I'll assemble my first program and watch SMs schedule warps in parallel.
+              <strong className="text-midnight-graphite">Next up — </strong>
+              <Link href="/blog/chapter-1" className="text-electric-blue hover:underline font-bold">
+                Chapter 1: Designing an Instruction Set from Scratch
+              </Link>
+              {". We design the binary instruction encoding bitfields and build the custom assembler compiler in Go translating text instructions into execute-ready byte streams. We'll assemble our first program and watch SMs schedule warps in parallel."}
             </p>
           </section>
 
@@ -361,6 +365,9 @@ export default function ChapterZeroPage() {
           <div className="border-t border-stone-gray pt-6 mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <Link href="/blog" className="text-xs font-bold font-mono text-electric-blue hover:underline whitespace-nowrap">
               ← BACK TO BLOG INDEX
+            </Link>
+            <Link href="/blog/chapter-1" className="text-xs font-bold font-mono bg-flame-orange text-white px-4 py-2 hover:bg-opacity-95 whitespace-nowrap text-center">
+              READ CHAPTER 1 →
             </Link>
             <Link href="/playground" className="text-xs font-bold font-mono bg-midnight-graphite text-white px-4 py-2 hover:bg-opacity-95 whitespace-nowrap text-center">
               TRY PLAYGROUND →
