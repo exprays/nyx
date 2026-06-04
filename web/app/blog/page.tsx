@@ -107,13 +107,13 @@ export default function BlogIndexPage() {
               An architectural deep-dive into GPU throughput and CPU latency design principles. I explore thread scheduling, the SIMD model, warp execution, branch divergence, and the top-level NYX implementation layout.
             </p>
 
-            <div className="flex items-center justify-between mt-2 pt-2 border-t border-stone-gray border-opacity-30">
-              <span className="text-[11px] font-mono text-smoke-gray uppercase tracking-wider flex items-center gap-1.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-2 pt-2 border-t border-stone-gray border-opacity-30">
+              <span className="text-[11px] font-mono text-smoke-gray uppercase tracking-wider">
                 8 MIN READ • BY SURYAKANT SUBUDHI • <LikesDisplay slug="chapter-0" />
               </span>
               <Link
                 href="/blog/chapter-0"
-                className="text-xs font-bold font-mono text-electric-blue hover:underline flex items-center gap-1"
+                className="text-xs font-bold font-mono text-electric-blue hover:underline flex items-center gap-1 self-start sm:self-auto"
               >
                 READ CHAPTER 0 →
               </Link>
@@ -138,13 +138,13 @@ export default function BlogIndexPage() {
               Designing the binary 32-bit instruction formats for the custom NYX ISA. We write an assembler tool in Go that parses assembly programs, resolves symbols, and outputs binary files ready for execution.
             </p>
 
-            <div className="flex items-center justify-between mt-2 pt-2 border-t border-stone-gray border-opacity-30">
-              <span className="text-[11px] font-mono text-smoke-gray uppercase tracking-wider flex items-center gap-1.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-2 pt-2 border-t border-stone-gray border-opacity-30">
+              <span className="text-[11px] font-mono text-smoke-gray uppercase tracking-wider">
                 6 MIN READ • BY SURYAKANT SUBUDHI • <LikesDisplay slug="chapter-1" />
               </span>
               <Link
                 href="/blog/chapter-1"
-                className="text-xs font-bold font-mono text-electric-blue hover:underline flex items-center gap-1"
+                className="text-xs font-bold font-mono text-electric-blue hover:underline flex items-center gap-1 self-start sm:self-auto"
               >
                 READ CHAPTER 1 →
               </Link>
