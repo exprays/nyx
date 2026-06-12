@@ -186,9 +186,7 @@ clean:
 	@echo "Cleaning Web build..."
 	rm -rf web/.next
 `,
-	"sim/sim.go": `// The top-level simulation config and entry point
-
-package sim
+	"sim/sim.go": `package sim
 
 import (
 	"fmt"
@@ -199,22 +197,21 @@ import (
 )
 
 const (
-	WarpSize  = 32     // threads per warp — fixed at 32 like real GPUs
-	MaxWarps  = 8      // max warps per SM
-	NumSMs    = 4      // number of streaming multiprocessors
-	MaxCycles = 100000 // safety limit to prevent infinite loops
+	WarpSize  = 32
+	MaxWarps  = 8
+	NumSMs    = 4
+	MaxCycles = 100000
 )
 
-// Sim is the top-level simulator
 type Sim struct {
-	Config    *core.KernelConfig
-	GlobalMem *memory.GlobalMemory
-	SMs       [NumSMs]*core.SM
-	Tracer    *trace.Tracer
-	Cycle     int
+	Config     *core.KernelConfig
+	GlobalMem  *memory.GlobalMemory
+	SMs        [NumSMs]*core.SM
+	Dispatcher *Dispatcher
+	Tracer     *trace.Tracer
+	Cycle      int
 }
 
-// New creates a new simulator from a kernel config
 func New(cfg *core.KernelConfig, tracer *trace.Tracer) (*Sim, error) {
 	if err := validateConfig(cfg); err != nil {
 		return nil, fmt.Errorf("invalid kernel config: %w", err)
@@ -224,12 +221,12 @@ func New(cfg *core.KernelConfig, tracer *trace.Tracer) (*Sim, error) {
 	gm.LoadData(cfg.GlobalMem)
 
 	s := &Sim{
-		Config:    cfg,
-		GlobalMem: gm,
-		Tracer:    tracer,
+		Config:     cfg,
+		GlobalMem:  gm,
+		Dispatcher: NewDispatcher(cfg),
+		Tracer:     tracer,
 	}
 
-	// Initialize SMs
 	for i := 0; i < NumSMs; i++ {
 		s.SMs[i] = &core.SM{
 			ID:    i,
@@ -245,7 +242,8 @@ func validateConfig(cfg *core.KernelConfig) error {
 		return fmt.Errorf("BlockDim must be > 0")
 	}
 	if cfg.BlockDim%WarpSize != 0 {
-		return fmt.Errorf("BlockDim (%d) must be a multiple of WarpSize (%d)", cfg.BlockDim, WarpSize)
+		return fmt.Errorf("BlockDim (%d) must be a multiple of WarpSize (%d)",
+			cfg.BlockDim, WarpSize)
 	}
 	if cfg.GridDim == 0 {
 		return fmt.Errorf("GridDim must be > 0")
@@ -256,12 +254,234 @@ func validateConfig(cfg *core.KernelConfig) error {
 	return nil
 }
 
-// Info prints a summary of the kernel about to run
+// Run executes the kernel to completion and returns the final cycle count
+func (s *Sim) Run() (int, error) {
+	for s.Cycle = 0; s.Cycle < MaxCycles; s.Cycle++ {
+		s.Tracer.CycleBanner(s.Cycle)
+
+		// 1. Dispatch blocks to idle SMs
+		s.Dispatcher.Assign(s.SMs)
+
+		// 2. Tick global memory — get responses for this cycle
+		memResponses := s.GlobalMem.Tick()
+
+		// 3. Route memory responses to the right SMs
+		// Build a per-SM response map for fast lookup
+		smResponses := make(map[int][]memory.Response)
+		for _, resp := range memResponses {
+			smResponses[resp.SMID] = append(smResponses[resp.SMID], resp)
+		}
+
+		// 4. Tick each running SM
+		allDone := true
+		for _, sm := range s.SMs {
+			if sm.State == core.SMIdle {
+				continue
+			}
+			if sm.State == core.SMDone {
+				continue
+			}
+
+			allDone = false
+			err := s.tickSM(sm, smResponses[sm.ID])
+			if err != nil {
+				return s.Cycle, fmt.Errorf("SM%d cycle %d: %w", sm.ID, s.Cycle, err)
+			}
+		}
+
+		// Also check if unstarted blocks remain
+		if !s.Dispatcher.AllDispatched() {
+			allDone = false
+		}
+
+		// Check if any SM is still running
+		for _, sm := range s.SMs {
+			if sm.State == core.SMRunning {
+				allDone = false
+				break
+			}
+		}
+
+		if allDone {
+			return s.Cycle + 1, nil
+		}
+	}
+
+	return MaxCycles, fmt.Errorf("simulation hit MaxCycles limit (%d) — possible infinite loop",
+		MaxCycles)
+}
+
+// tickSM advances one SM by one cycle.
+// It ticks every warp in the active block.
+func (s *Sim) tickSM(sm *core.SM, responses []memory.Response) error {
+	block := sm.ActiveBlock
+	if block == nil {
+		sm.State = core.SMIdle
+		return nil
+	}
+
+	// Tag all in-flight memory requests with this SM's ID
+	// so responses route back correctly (done at submission time below)
+
+	blockDone := true
+	for _, warp := range block.Warps {
+		if warp.State == core.WarpDone {
+			continue
+		}
+		blockDone = false
+
+		err := s.tickWarp(sm, warp, block, responses)
+		if err != nil {
+			return err
+		}
+	}
+
+	if blockDone {
+		s.Tracer.Emit(trace.Event{
+			Cycle:    s.Cycle,
+			SMID:     sm.ID,
+			WarpID:   -1,
+			ThreadID: -1,
+			Kind:     "BLOCK_DONE",
+			Detail:   fmt.Sprintf("block %d complete", block.ID),
+		})
+
+		// Try to get next block from dispatcher
+		sm.ActiveBlock = nil
+		sm.State = core.SMIdle
+	}
+
+	return nil
+}
+
+// tickWarp advances one warp by one cycle.
+// All threads in the warp that are active get ticked.
+func (s *Sim) tickWarp(
+	sm *core.SM,
+	warp *core.Warp,
+	block *core.Block,
+	responses []memory.Response,
+) error {
+
+	sharedMem := memory.NewSharedMemory(block.SharedMemSz)
+	// restore from block's shared memory slice
+	copy(sharedMem.Data, block.SharedMem)
+
+	// Filter responses for threads in this warp
+	warpResponses := make([]memory.Response, 0)
+	for _, resp := range responses {
+		for _, t := range warp.Threads {
+			if resp.ThreadID == t.ID {
+				warpResponses = append(warpResponses, resp)
+				break
+			}
+		}
+	}
+
+	// SYNC check: if all threads are in SyncWait, release them
+	allAtSync := true
+	for _, t := range warp.Threads {
+		if !t.IsDone() && t.State != core.ThreadSyncWait {
+			allAtSync = false
+			break
+		}
+	}
+	if allAtSync {
+		for _, t := range warp.Threads {
+			if t.State == core.ThreadSyncWait {
+				t.State = core.ThreadFetch
+				t.PC++ // advance past the SYNC instruction
+			}
+		}
+		s.Tracer.Emit(trace.Event{
+			Cycle:    s.Cycle,
+			SMID:     sm.ID,
+			WarpID:   warp.ID,
+			ThreadID: -1,
+			Kind:     "SYNC_RELEASE",
+			Detail:   fmt.Sprintf("warp %d barrier released", warp.ID),
+		})
+	}
+
+	// Tick each active thread
+	memStall := false
+	for i, t := range warp.Threads {
+		if t.IsDone() {
+			continue
+		}
+		// Only tick threads in the active mask
+		if warp.ActiveMask&(1<<uint(i)) == 0 {
+			continue
+		}
+
+		result := t.Tick(s.Config.Program, warpResponses, sharedMem)
+		if result.Err != nil {
+			return result.Err
+		}
+
+		// Emit trace event for this thread
+		if result.Instr.Opcode != 0 || result.State != core.ThreadIdle {
+			s.Tracer.Emit(trace.Event{
+				Cycle:    s.Cycle,
+				SMID:     sm.ID,
+				WarpID:   warp.ID,
+				ThreadID: t.ID,
+				Kind:     result.State.String(),
+				Detail:   fmt.Sprintf("pc=%-3d %s", result.PC, result.Disasm),
+			})
+		}
+
+		// Submit memory requests to the global memory controller
+		if result.MemRequest != nil {
+			req := result.MemRequest
+			req.WarpID = warp.ID
+			req.SMID = sm.ID
+			s.GlobalMem.Submit(req)
+
+			s.Tracer.Emit(trace.Event{
+				Cycle:    s.Cycle,
+				SMID:     sm.ID,
+				WarpID:   warp.ID,
+				ThreadID: t.ID,
+				Kind:     "MEM_REQ",
+				Detail: fmt.Sprintf("pc=%-3d %s addr=0x%04X write=%v",
+					result.PC, result.Disasm, result.MemRequest.Addr, result.MemRequest.IsWrite),
+			})
+		}
+
+		if t.IsStalled() {
+			memStall = true
+		}
+	}
+
+	// Flush shared memory writes back to the block
+	copy(block.SharedMem, sharedMem.Data)
+
+	// Update warp state
+	if warp.AllDone() {
+		warp.State = core.WarpDone
+		s.Tracer.Emit(trace.Event{
+			Cycle:    s.Cycle,
+			SMID:     sm.ID,
+			WarpID:   warp.ID,
+			ThreadID: -1,
+			Kind:     "WARP_DONE",
+			Detail:   fmt.Sprintf("warp %d retired", warp.ID),
+		})
+	} else if memStall {
+		warp.State = core.WarpMemWait
+	} else {
+		warp.State = core.WarpRunning
+	}
+
+	return nil
+}
+
 func (s *Sim) Info() {
 	total := s.Config.GridDim * s.Config.BlockDim
 	warpsPerBlock := s.Config.BlockDim / WarpSize
 	fmt.Println("╔══════════════════════════════════════════════╗")
-	fmt.Printf("║  NYX GPU                                     ║\n")
+	fmt.Println("║  NYX GPU Implementation                      ║")
 	fmt.Println("╠══════════════════════════════════════════════╣")
 	fmt.Printf("║  Kernel        : %-28s║\n", s.Config.Name)
 	fmt.Printf("║  Grid dim      : %-28d║\n", s.Config.GridDim)
@@ -271,6 +491,64 @@ func (s *Sim) Info() {
 	fmt.Printf("║  SMs           : %-28d║\n", NumSMs)
 	fmt.Printf("║  Program size  : %-28d║\n", len(s.Config.Program))
 	fmt.Println("╚══════════════════════════════════════════════╝")
+}
+`,
+	"sim/dispatcher.go": `// Assigns blocks to idle SMs. Simple round-robin.
+
+package sim
+
+import (
+	"github.com/exprays/nyx/core"
+)
+
+// Dispatcher manages the assignment of blocks to SMs.
+// It keeps a queue of unassigned blocks and feeds them
+// to idle SMs each cycle.
+type Dispatcher struct {
+	blocks    []*core.Block // all blocks to be executed
+	nextBlock int           // index of next unassigned block
+	done      bool
+}
+
+func NewDispatcher(cfg *core.KernelConfig) *Dispatcher {
+	totalBlocks := cfg.GridDim
+	blocks := make([]*core.Block, totalBlocks)
+	for i := 0; i < totalBlocks; i++ {
+		blocks[i] = core.NewBlock(i, cfg.BlockDim, cfg.SharedMemSz)
+	}
+	return &Dispatcher{
+		blocks:    blocks,
+		nextBlock: 0,
+	}
+}
+
+// Assign gives each idle SM a block if one is available.
+// Returns how many assignments were made this cycle.
+func (d *Dispatcher) Assign(sms [NumSMs]*core.SM) int {
+	assigned := 0
+	for _, sm := range sms {
+		if sm.State != core.SMIdle {
+			continue
+		}
+		if d.nextBlock >= len(d.blocks) {
+			break
+		}
+		sm.ActiveBlock = d.blocks[d.nextBlock]
+		sm.State = core.SMRunning
+		d.nextBlock++
+		assigned++
+	}
+	return assigned
+}
+
+// AllDispatched returns true when every block has been handed out
+func (d *Dispatcher) AllDispatched() bool {
+	return d.nextBlock >= len(d.blocks)
+}
+
+// TotalBlocks returns the total number of blocks in this kernel
+func (d *Dispatcher) TotalBlocks() int {
+	return len(d.blocks)
 }
 `,
 	"core/types.go": `// All the core types that the rest of the simulator is built upon.
@@ -432,6 +710,365 @@ type KernelConfig struct {
 	Program     []isa.Instruction // compiled instructions
 	GlobalMem   []int32           // initial global memory state
 	SharedMemSz int               // shared memory bytes per block
+}
+
+// NewThread creates a thread with its special registers pre-injected
+func NewThread(globalID, threadIdx, blockIdx, blockDim int) *Thread {
+	t := &Thread{
+		ID:        globalID,
+		BlockID:   blockIdx,
+		ThreadIdx: threadIdx,
+		BlockDim:  blockDim,
+		State:     ThreadFetch,
+	}
+	t.Registers[isa.REG_THREAD_IDX] = int32(threadIdx)
+	t.Registers[isa.REG_BLOCK_IDX] = int32(blockIdx)
+	t.Registers[isa.REG_BLOCK_DIM] = int32(blockDim)
+	return t
+}
+
+// IsDone returns true if the thread has retired
+func (t *Thread) IsDone() bool {
+	return t.State == ThreadDone
+}
+
+// IsStalled returns true if the thread is waiting on memory
+func (t *Thread) IsStalled() bool {
+	return t.State == ThreadMemWait || t.State == ThreadSyncWait
+}
+
+// NewWarp creates a warp from a slice of threads
+// All threads start active (mask = all 1s)
+func NewWarp(id int, threads []*Thread) *Warp {
+	mask := uint32((1 << len(threads)) - 1)
+	return &Warp{
+		ID:         id,
+		Threads:    threads,
+		ActiveMask: mask,
+		State:      WarpReady,
+		PC:         0,
+	}
+}
+
+// AllDone returns true if every thread in the warp has retired
+func (w *Warp) AllDone() bool {
+	for _, t := range w.Threads {
+		if !t.IsDone() {
+			return false
+		}
+	}
+	return true
+}
+
+// ActiveCount returns how many threads are currently active
+func (w *Warp) ActiveCount() int {
+	n := 0
+	for i := range w.Threads {
+		if w.ActiveMask&(1<<uint(i)) != 0 {
+			n++
+		}
+	}
+	return n
+}
+
+// NewBlock builds a block from a config and block index
+func NewBlock(blockIdx, blockDim, sharedMemSz int) *Block {
+	warpsNeeded := blockDim / 32
+	warps := make([]*Warp, warpsNeeded)
+
+	for wi := 0; wi < warpsNeeded; wi++ {
+		threads := make([]*Thread, 32)
+		for ti := 0; ti < 32; ti++ {
+			localThreadIdx := wi*32 + ti
+			globalID := blockIdx*blockDim + localThreadIdx
+			threads[ti] = NewThread(globalID, localThreadIdx, blockIdx, blockDim)
+		}
+		warps[wi] = NewWarp(wi, threads)
+	}
+
+	return &Block{
+		ID:          blockIdx,
+		Warps:       warps,
+		SharedMem:   make([]int32, sharedMemSz),
+		SharedMemSz: sharedMemSz,
+	}
+}
+`,
+	"core/thread.go": `// A complete per-thread state machine: FETCH → DECODE → EXECUTE → UPDATE.
+// Every stage is explicit. No shortcuts.
+
+package core
+
+import (
+	"fmt"
+
+	"github.com/exprays/nyx/isa"
+	"github.com/exprays/nyx/memory"
+)
+
+// StepResult is what a thread reports after one cycle tick
+type StepResult struct {
+	ThreadID   int
+	State      ThreadState
+	PC         int32
+	Instr      isa.Instruction
+	Disasm     string
+	MemRequest *memory.Request // non-nil if thread is issuing a memory op
+	Done       bool
+	Err        error
+}
+
+// Tick advances a single thread by one cycle.
+// program is the full instruction slice.
+// memResponses is the set of memory responses that arrived this cycle.
+// sharedMem is the block's shared memory.
+func (t *Thread) Tick(
+	program []isa.Instruction,
+	memResponses []memory.Response,
+	sharedMem *memory.SharedMemory,
+) StepResult {
+
+	result := StepResult{
+		ThreadID: t.ID,
+		State:    t.State,
+		PC:       t.PC,
+	}
+
+	switch t.State {
+
+	// ── FETCH ────────────────────────────────────────────────────────────────
+	case ThreadFetch:
+		if int(t.PC) >= len(program) {
+			result.Err = fmt.Errorf("thread %d: PC %d out of program bounds (%d instructions)",
+				t.ID, t.PC, len(program))
+			t.State = ThreadDone
+			result.State = t.State
+			return result
+		}
+		// Latch the instruction — in a real GPU this would be an async
+		// fetch from instruction cache. We model it as instant for now
+		// (cache is Part 6). Transition straight to DECODE.
+		instr := program[t.PC]
+		result.Instr = instr
+		result.Disasm = isa.Disassemble(instr)
+		t.State = ThreadDecode
+		result.State = t.State
+		return result
+
+	// ── DECODE ───────────────────────────────────────────────────────────────
+	case ThreadDecode:
+		// Re-read the instruction at current PC (already latched conceptually)
+		instr := program[t.PC]
+		result.Instr = instr
+		result.Disasm = isa.Disassemble(instr)
+
+		switch instr.Opcode {
+		case isa.OP_LDR, isa.OP_STR:
+			// Memory ops go to REQUEST state first
+			t.State = ThreadMemReq
+		case isa.OP_LDSH, isa.OP_STSH:
+			// Shared memory — no latency, go straight to execute
+			t.State = ThreadExecute
+		default:
+			t.State = ThreadExecute
+		}
+		result.State = t.State
+		return result
+
+	// ── EXECUTE ──────────────────────────────────────────────────────────────
+	case ThreadExecute:
+		instr := program[t.PC]
+		result.Instr = instr
+		result.Disasm = isa.Disassemble(instr)
+
+		err := t.execute(instr, sharedMem)
+		if err != nil {
+			result.Err = err
+			t.State = ThreadDone
+			result.State = t.State
+			return result
+		}
+
+		// After RET we are done — don't advance PC
+		if instr.Opcode == isa.OP_RET {
+			t.State = ThreadDone
+			result.Done = true
+			result.State = t.State
+			return result
+		}
+
+		// SYNC stalls until the warp scheduler releases us
+		if instr.Opcode == isa.OP_SYNC {
+			t.State = ThreadSyncWait
+			result.State = t.State
+			return result
+		}
+
+		// Everything else: advance PC and go back to FETCH
+		t.PC++
+		t.State = ThreadFetch
+		result.State = t.State
+		return result
+
+	// ── MEM_REQ ──────────────────────────────────────────────────────────────
+	case ThreadMemReq:
+		instr := program[t.PC]
+		result.Instr = instr
+		result.Disasm = isa.Disassemble(instr)
+
+		var req *memory.Request
+		switch instr.Opcode {
+		case isa.OP_LDR:
+			addr := t.Registers[instr.Rs1]
+			req = &memory.Request{
+				ThreadID: t.ID,
+				Addr:     addr,
+				IsWrite:  false,
+			}
+			t.MemAddr = addr
+			t.MemIsLoad = true
+
+		case isa.OP_STR:
+			addr := t.Registers[instr.Rs1]
+			val := t.Registers[instr.Rs2]
+			req = &memory.Request{
+				ThreadID: t.ID,
+				Addr:     addr,
+				IsWrite:  true,
+				WriteVal: val,
+			}
+			t.MemAddr = addr
+			t.MemValue = val
+			t.MemIsLoad = false
+		}
+
+		result.MemRequest = req
+		t.State = ThreadMemWait
+		result.State = t.State
+		return result
+
+	// ── MEM_WAIT ─────────────────────────────────────────────────────────────
+	case ThreadMemWait:
+		instr := program[t.PC]
+		result.Instr = instr
+		result.Disasm = isa.Disassemble(instr)
+
+		// Scan this cycle's memory responses for our thread
+		for _, resp := range memResponses {
+			if resp.ThreadID == t.ID && resp.Addr == t.MemAddr {
+				if t.MemIsLoad {
+					// Write the loaded value into the destination register
+					t.Registers[instr.Rd] = resp.Value
+				}
+				// Done waiting — advance PC
+				t.PC++
+				t.State = ThreadFetch
+				result.State = t.State
+				return result
+			}
+		}
+
+		// No response yet — stay in MEM_WAIT
+		result.State = t.State
+		return result
+
+	// ── SYNC_WAIT ────────────────────────────────────────────────────────────
+	case ThreadSyncWait:
+		// The warp scheduler will flip us back to ThreadFetch
+		// when all threads in the block reach SYNC_WAIT.
+		// Nothing to do here — just report state.
+		result.State = t.State
+		return result
+
+	// ── DONE ─────────────────────────────────────────────────────────────────
+	case ThreadDone:
+		result.Done = true
+		result.State = t.State
+		return result
+	}
+
+	result.Err = fmt.Errorf("thread %d: unhandled state %v", t.ID, t.State)
+	return result
+}
+
+// execute performs the actual computation for a single instruction.
+// It mutates t.Registers and t.NZP in place.
+func (t *Thread) execute(instr isa.Instruction, sharedMem *memory.SharedMemory) error {
+	r := &t.Registers // shorthand
+
+	switch instr.Opcode {
+
+	case isa.OP_ADD:
+		r[instr.Rd] = r[instr.Rs1] + r[instr.Rs2]
+
+	case isa.OP_SUB:
+		r[instr.Rd] = r[instr.Rs1] - r[instr.Rs2]
+
+	case isa.OP_MUL:
+		r[instr.Rd] = r[instr.Rs1] * r[instr.Rs2]
+
+	case isa.OP_DIV:
+		if r[instr.Rs2] == 0 {
+			return fmt.Errorf("thread %d: division by zero at PC %d", t.ID, t.PC)
+		}
+		r[instr.Rd] = r[instr.Rs1] / r[instr.Rs2]
+
+	case isa.OP_CMP:
+		diff := r[instr.Rs1] - r[instr.Rs2]
+		switch {
+		case diff < 0:
+			t.NZP = NZP_NEGATIVE
+		case diff == 0:
+			t.NZP = NZP_ZERO
+		default:
+			t.NZP = NZP_POSITIVE
+		}
+
+	case isa.OP_BRnzp:
+		nzpBit := uint8(t.NZP)
+		if nzpBit&instr.NZPMask != 0 {
+			// Branch taken — PC-relative, offset from NEXT instruction
+			// We are in execute, PC hasn't been incremented yet.
+			// After execute, the caller does t.PC++ unless we are RET/SYNC.
+			// So we need to set PC = current + 1 + offset, then subtract 1
+			// because execute's caller will do PC++ unconditionally.
+			// Simplest: set PC to target - 1, then let caller do PC++.
+			t.PC = t.PC + 1 + instr.Imm - 1
+		}
+		// Branch not taken — caller does t.PC++ normally
+
+	case isa.OP_CONST:
+		r[instr.Rd] = instr.Imm
+
+	case isa.OP_LDSH:
+		if sharedMem == nil {
+			return fmt.Errorf("thread %d: LDSH but no shared memory", t.ID)
+		}
+		val, err := sharedMem.Read(instr.Imm)
+		if err != nil {
+			return fmt.Errorf("thread %d LDSH: %w", t.ID, err)
+		}
+		r[instr.Rd] = val
+
+	case isa.OP_STSH:
+		if sharedMem == nil {
+			return fmt.Errorf("thread %d: STSH but no shared memory", t.ID)
+		}
+		if err := sharedMem.Write(instr.Imm, r[instr.Rs1]); err != nil {
+			return fmt.Errorf("thread %d STSH: %w", t.ID, err)
+		}
+
+	case isa.OP_SYNC, isa.OP_RET:
+		// handled in Tick state machine above
+
+	case isa.OP_LDR, isa.OP_STR:
+		// handled via MemReq/MemWait states — should not reach execute
+
+	default:
+		return fmt.Errorf("thread %d: unknown opcode %d", t.ID, instr.Opcode)
+	}
+
+	return nil
 }
 `,
 	"isa/isa.go": `// Package isa provides the instruction set architecture for Nyx.  Every opcode NYX will ever understand. We define it all here upfront so every other package imports from one source of truth.
@@ -1297,10 +1934,7 @@ func (s *SharedMemory) Write(offset int32, val int32) error {
 	return nil
 }
 `,
-	"trace/trace.go": `// Nyx tracer
-// Shows traces for every cycle, every thread, every warp!
-
-package trace
+	"trace/trace.go": `package trace
 
 import (
 	"fmt"
@@ -1308,27 +1942,37 @@ import (
 	"time"
 )
 
-// Level controls how much trace detail is shown
+
+// ANSI color codes
+const (
+	colorReset  = "\\033[0m"
+	colorGray   = "\\033[90m"
+	colorGreen  = "\\033[32m"
+	colorYellow = "\\033[33m"
+	colorRed    = "\\033[31m"
+	colorCyan   = "\\033[36m"
+	colorBlue   = "\\033[34m"
+	colorBold   = "\\033[1m"
+)
+
 type Level int
 
 const (
-	LevelSilent  Level = iota // no output
-	LevelSummary              // only cycle count and SM states
-	LevelWarp                 // per-warp state each cycle
-	LevelThread               // full per-thread detail each cycle
+	LevelSilent Level = iota
+	LevelSummary
+	LevelWarp
+	LevelThread
 )
 
-// Event is a single trace event emitted during simulation
 type Event struct {
 	Cycle    int
 	SMID     int
 	WarpID   int
 	ThreadID int
-	Kind     string // "FETCH", "EXECUTE", "MEM_REQ", "MEM_RESP", "BRANCH", "RET", "SYNC"
-	Detail   string // human readable detail
+	Kind     string
+	Detail   string
 }
 
-// Tracer collects and displays trace events
 type Tracer struct {
 	Level     Level
 	Events    []Event
@@ -1338,7 +1982,7 @@ type Tracer struct {
 func NewTracer(level Level) *Tracer {
 	return &Tracer{
 		Level:     level,
-		Events:    make([]Event, 0, 1024),
+		Events:    make([]Event, 0, 4096),
 		StartTime: time.Now(),
 	}
 }
@@ -1352,51 +1996,90 @@ func (t *Tracer) Emit(e Event) {
 }
 
 func (t *Tracer) print(e Event) {
+	color := kindColor(e.Kind)
+
 	switch t.Level {
 	case LevelSummary:
-		// Only print non-thread events
-		if e.ThreadID == -1 {
-			fmt.Printf("[cycle %04d] SM%d W%d | %s %s\n",
-				e.Cycle, e.SMID, e.WarpID, e.Kind, e.Detail)
+		// Only block and warp-level events
+		if e.Kind == "BLOCK_DONE" || e.Kind == "WARP_DONE" || e.Kind == "SYNC_RELEASE" {
+			fmt.Printf("%s[%04d]%s SM%d W%02d  %s%-12s%s %s\n",
+				colorGray, e.Cycle, colorReset,
+				e.SMID, e.WarpID,
+				color, e.Kind, colorReset,
+				e.Detail)
 		}
+
 	case LevelWarp:
-		if e.ThreadID == -1 {
-			fmt.Printf("[cycle %04d] SM%d W%02d         | %-10s %s\n",
-				e.Cycle, e.SMID, e.WarpID, e.Kind, e.Detail)
+		if e.ThreadID < 0 {
+			fmt.Printf("%s[%04d]%s SM%d W%02d        %s%-12s%s %s\n",
+				colorGray, e.Cycle, colorReset,
+				e.SMID, e.WarpID,
+				color, e.Kind, colorReset,
+				e.Detail)
 		}
+
 	case LevelThread:
 		if e.ThreadID >= 0 {
-			fmt.Printf("[cycle %04d] SM%d W%02d T%03d     | %-10s %s\n",
-				e.Cycle, e.SMID, e.WarpID, e.ThreadID, e.Kind, e.Detail)
+			fmt.Printf("%s[%04d]%s SM%d W%02d T%03d  %s%-12s%s %s\n",
+				colorGray, e.Cycle, colorReset,
+				e.SMID, e.WarpID, e.ThreadID,
+				color, e.Kind, colorReset,
+				e.Detail)
 		} else {
-			fmt.Printf("[cycle %04d] SM%d W%02d           | %-10s %s\n",
-				e.Cycle, e.SMID, e.WarpID, e.Kind, e.Detail)
+			fmt.Printf("%s[%04d]%s SM%d W%02d        %s%-12s%s %s\n",
+				colorGray, e.Cycle, colorReset,
+				e.SMID, e.WarpID,
+				color, e.Kind, colorReset,
+				e.Detail)
 		}
 	}
 }
 
-// CycleBanner prints a divider at the start of each cycle
-func (t *Tracer) CycleBanner(cycle int) {
-	if t.Level >= LevelWarp {
-		fmt.Printf("\n%s CYCLE %04d %s\n",
-			strings.Repeat("─", 20), cycle, strings.Repeat("─", 20))
+func kindColor(kind string) string {
+	switch kind {
+	case "FETCH":
+		return colorGray
+	case "DECODE":
+		return colorBlue
+	case "EXECUTE":
+		return colorGreen
+	case "MEM_REQ":
+		return colorYellow
+	case "MEM_WAIT":
+		return colorYellow
+	case "WARP_DONE", "BLOCK_DONE":
+		return colorCyan
+	case "SYNC_RELEASE":
+		return colorCyan
+	case "RET", "DONE":
+		return colorRed
+	default:
+		return colorReset
 	}
 }
 
-// Summary prints final stats at the end of simulation
+func (t *Tracer) CycleBanner(cycle int) {
+	if t.Level >= LevelWarp {
+		fmt.Printf("\n%s%s CYCLE %04d %s%s\n",
+			colorBold+colorGray,
+			strings.Repeat("─", 18),
+			cycle,
+			strings.Repeat("─", 18),
+			colorReset)
+	}
+}
+
 func (t *Tracer) Summary(totalCycles int, globalMem []int32, showMemRange [2]int) {
 	elapsed := time.Since(t.StartTime)
 
-	fmt.Println()
-	fmt.Println(strings.Repeat("═", 52))
-	fmt.Println("  NYX SIMULATION COMPLETE")
-	fmt.Println(strings.Repeat("═", 52))
-	fmt.Printf("  Total cycles   : %d\n", totalCycles)
+	fmt.Printf("\n%s%s%s\n", colorBold, strings.Repeat("═", 52), colorReset)
+	fmt.Printf("%s  NYX SIMULATION COMPLETE%s\n", colorBold, colorReset)
+	fmt.Printf("%s%s%s\n", colorBold, strings.Repeat("═", 52), colorReset)
+	fmt.Printf("  Total cycles   : %s%d%s\n", colorGreen, totalCycles, colorReset)
 	fmt.Printf("  Total events   : %d\n", len(t.Events))
 	fmt.Printf("  Wall time      : %s\n", elapsed.Round(time.Millisecond))
 	fmt.Println(strings.Repeat("─", 52))
 
-	// Print a slice of global memory so you can see results
 	start := showMemRange[0]
 	end := showMemRange[1]
 	if end > len(globalMem) {
@@ -1404,9 +2087,11 @@ func (t *Tracer) Summary(totalCycles int, globalMem []int32, showMemRange [2]int
 	}
 	fmt.Printf("  Global mem [%d..%d]:\n", start, end-1)
 	for i := start; i < end; i++ {
-		fmt.Printf("    [%03d] = %d\n", i, globalMem[i])
+		fmt.Printf("    %s[%03d]%s = %s%d%s\n",
+			colorGray, i, colorReset,
+			colorGreen, globalMem[i], colorReset)
 	}
-	fmt.Println(strings.Repeat("═", 52))
+	fmt.Printf("%s%s%s\n", colorBold, strings.Repeat("═", 52), colorReset)
 }
 `,
 	"kernels/vecadd.nyx": `; vecadd.nyx — vector addition kernel

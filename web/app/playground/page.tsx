@@ -306,6 +306,15 @@ export default function Playground() {
                 <span className="truncate">sim/sim.go</span>
               </button>
               <button
+                onClick={() => setActiveFile("sim/dispatcher.go")}
+                className={`flex items-center gap-1.5 w-full whitespace-nowrap text-left text-xs px-3 py-1.5 font-mono ${activeFile === "sim/dispatcher.go" ? "bg-stone-gray font-bold text-ash-black" : "text-smoke-gray hover:bg-white"
+                  }`}
+              >
+                <span>📁</span>
+                <span className="truncate">sim/dispatcher.go</span>
+                <span className="text-[8px] text-flame-orange border border-flame-orange px-1.5 py-0.5 ml-auto font-sans font-bold select-none bg-white">NEW</span>
+              </button>
+              <button
                 onClick={() => setActiveFile("core/types.go")}
                 className={`flex items-center gap-1.5 w-full whitespace-nowrap text-left text-xs px-3 py-1.5 font-mono ${activeFile === "core/types.go" ? "bg-stone-gray font-bold text-ash-black" : "text-smoke-gray hover:bg-white"
                   }`}
@@ -313,6 +322,16 @@ export default function Playground() {
                 <span>📁</span>
                 <span className="truncate">core/types.go</span>
               </button>
+              <button
+                onClick={() => setActiveFile("core/thread.go")}
+                className={`flex items-center gap-1.5 w-full whitespace-nowrap text-left text-xs px-3 py-1.5 font-mono ${activeFile === "core/thread.go" ? "bg-stone-gray font-bold text-ash-black" : "text-smoke-gray hover:bg-white"
+                  }`}
+              >
+                <span>📁</span>
+                <span className="truncate">core/thread.go</span>
+                <span className="text-[8px] text-flame-orange border border-flame-orange px-1.5 py-0.5 ml-auto font-sans font-bold select-none bg-white">NEW</span>
+              </button>
+
               <button
                 onClick={() => setActiveFile("isa/isa.go")}
                 className={`flex items-center gap-1.5 w-full whitespace-nowrap text-left text-xs px-3 py-1.5 font-mono ${activeFile === "isa/isa.go" ? "bg-stone-gray font-bold text-ash-black" : "text-smoke-gray hover:bg-white"

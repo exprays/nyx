@@ -5,11 +5,12 @@ import (
 	"os"
 
 	"github.com/exprays/nyx/asm"
-	"github.com/exprays/nyx/isa"
+	"github.com/exprays/nyx/core"
+	"github.com/exprays/nyx/sim"
+	"github.com/exprays/nyx/trace"
 )
 
 const vecaddSrc = `
-; vecadd.nyx
 MUL  R0, %blockIdx, %blockDim
 ADD  R0, R0, %threadIdx
 CONST R1, #0
@@ -25,105 +26,54 @@ STR  R7, R6
 RET
 `
 
-const matmulSrc = `
-; matmul.nyx
-MUL  R0, %blockIdx, %blockDim
-ADD  R0, R0, %threadIdx
-CONST R1, #1
-CONST R2, #2
-CONST R3, #0
-CONST R4, #4
-CONST R5, #8
-DIV  R6, R0, R2
-MUL  R7, R6, R2
-SUB  R7, R0, R7
-CONST R8, #0
-CONST R9, #0
-LOOP:
-    MUL  R10, R6, R2
-    ADD  R10, R10, R9
-    ADD  R10, R10, R3
-    LDR  R10, R10
-    MUL  R11, R9, R2
-    ADD  R11, R11, R7
-    ADD  R11, R11, R4
-    LDR  R11, R11
-    MUL  R12, R10, R11
-    ADD  R8, R8, R12
-    ADD  R9, R9, R1
-    CMP  R9, R2
-    BRN  LOOP
-ADD  R10, R5, R0
-STR  R10, R8
-RET
-`
-
 func main() {
-	fmt.Println("╔══════════════════════════════════════════════╗")
-	fmt.Println("║               NYX Assembler                  ║")
-	fmt.Println("╚══════════════════════════════════════════════╝")
-
-	assembleAndPrint("vecadd", vecaddSrc)
-	fmt.Println()
-	assembleAndPrint("matmul", matmulSrc)
-}
-
-func assembleAndPrint(name, src string) {
-	a := asm.New(src)
+	// Assemble the kernel
+	a := asm.New(vecaddSrc)
 	kernel, err := a.Assemble()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "assemble %s: %v\n", name, err)
+		fmt.Fprintf(os.Stderr, "assemble error: %v\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Printf("\n── %s (%d instructions) ──\n", name, len(kernel.Instructions))
-
-	// Print labels map
-	if len(kernel.Labels) > 0 {
-		fmt.Println("  Labels:")
-		for label, idx := range kernel.Labels {
-			fmt.Printf("    %-12s → pc=%d\n", label, idx)
-		}
+	// Initial memory layout:
+	//   [0..7]   = A = {1,2,3,4,5,6,7,8}
+	//   [8..15]  = B = {8,7,6,5,4,3,2,1}
+	//   [16..23] = C = output (zeros)
+	// Expected result: C[i] = 9 for all i
+	globalMem := make([]int32, 256)
+	for i := 0; i < 8; i++ {
+		globalMem[i] = int32(i + 1)   // A
+		globalMem[i+8] = int32(8 - i) // B
 	}
 
-	// Print disassembly with encoding
-	fmt.Printf("\n  %-4s  %-10s  %-30s  %s\n", "PC", "HEX", "DISASM", "SOURCE")
-	fmt.Println("  " + "─────────────────────────────────────────────────────────")
-	for i, instr := range kernel.Instructions {
-		encoded, err := isa.Encode(instr)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "encode error at pc=%d: %v\n", i, err)
-			os.Exit(1)
-		}
-
-		srcLine := ""
-		if i < len(kernel.SourceLines) {
-			srcLine = kernel.SourceLines[i]
-		}
-
-		disasm := isa.Disassemble(instr)
-		fmt.Printf("  %-4d  0x%08X  %-30s  ; %s\n",
-			i, encoded, disasm, srcLine)
+	cfg := &core.KernelConfig{
+		Name:        "vecadd",
+		GridDim:     1,  // 1 block
+		BlockDim:    32, // 32 threads = 1 warp (only 8 do meaningful work)
+		Program:     kernel.Instructions,
+		GlobalMem:   globalMem,
+		SharedMemSz: 0,
 	}
 
-	// Verify round-trip: encode → decode → re-encode must match
-	fmt.Println("\n  Round-trip check (encode → decode → encode):")
-	allOk := true
-	for i, instr := range kernel.Instructions {
-		enc1, _ := isa.Encode(instr)
-		dec, err := isa.Decode(enc1)
-		if err != nil {
-			fmt.Printf("    pc=%d DECODE ERROR: %v\n", i, err)
-			allOk = false
-			continue
-		}
-		enc2, _ := isa.Encode(dec)
-		if enc1 != enc2 {
-			fmt.Printf("    pc=%d MISMATCH: 0x%08X → 0x%08X\n", i, enc1, enc2)
-			allOk = false
-		}
+	// LevelThread = full per-thread trace every cycle
+	// Change to LevelSummary for less noise
+	tracer := trace.NewTracer(trace.LevelSummary)
+
+	s, err := sim.New(cfg, tracer)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "sim init error: %v\n", err)
+		os.Exit(1)
 	}
-	if allOk {
-		fmt.Println("  ✓ all instructions encode/decode correctly")
+
+	s.Info()
+	fmt.Println()
+
+	cycles, err := s.Run()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "sim run error: %v\n", err)
+		os.Exit(1)
 	}
+
+	// Show output region of global memory
+	tracer.Summary(cycles, s.GlobalMem.Data, [2]int{0, 24})
 }

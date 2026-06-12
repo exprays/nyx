@@ -151,31 +151,34 @@ export default function BlogIndexPage() {
             </div>
           </div>
 
-          {/* Chapter 2 Entry (Dashed/Planned) */}
-          <div className="border border-stone-gray border-dashed bg-cloud-white bg-opacity-50 p-6 sm:p-8 flex flex-col gap-4 opacity-75">
+          {/* Chapter 2 Entry */}
+          <div className="border border-stone-gray bg-white p-6 sm:p-8 flex flex-col gap-4 hover:border-steel-gray transition-colors">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-gray pb-3">
               <div className="flex items-center gap-3">
-                <span className="bg-stone-gray text-midnight-graphite border border-stone-gray px-2.5 py-0.5 text-xs font-mono font-bold">
+                <span className="bg-electric-blue text-white px-2.5 py-0.5 text-xs font-mono font-bold">
                   CHAPTER 2
                 </span>
-                <h2 className="font-sans font-bold text-sm sm:text-base md:text-lg text-smoke-gray uppercase tracking-tight">
-                  Core Execution Engine & Warp Scheduler
+                <h2 className="font-sans font-bold text-sm sm:text-base md:text-lg text-ash-black uppercase tracking-tight">
+                  The Thread Execution Engine
                 </h2>
               </div>
-              <span className="text-xs font-mono text-smoke-gray">IN DEVELOPMENT</span>
+              <span className="text-xs font-mono text-smoke-gray">June 12, 2026</span>
             </div>
 
-            <p className="font-mono text-xs sm:text-sm leading-relaxed text-smoke-gray">
-              Building the cycle-by-cycle execution engine. We will model the thread execution state machine (FETCH, DECODE, EXECUTE, MEM_REQ, MEM_WAIT), warp scheduler instruction dispatching, and NZP status flags.
+            <p className="font-mono text-xs sm:text-sm leading-relaxed text-steel-gray">
+              Building the cycle-by-cycle execution engine. We model the thread execution state machine (FETCH, DECODE, EXECUTE, MEM_REQ, MEM_WAIT), register files, special registers, and dispatcher assignment.
             </p>
 
-            <div className="flex items-center justify-between mt-2 pt-2 border-t border-stone-gray border-opacity-30">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-2 pt-2 border-t border-stone-gray border-opacity-30">
               <span className="text-[11px] font-mono text-smoke-gray uppercase tracking-wider">
-                COMING SOON
+                7 MIN READ • BY SURYAKANT SUBUDHI • <LikesDisplay slug="chapter-2" />
               </span>
-              <span className="text-xs font-mono text-stone-gray italic">
-                Locked
-              </span>
+              <Link
+                href="/blog/chapter-2"
+                className="text-xs font-bold font-mono text-electric-blue hover:underline flex items-center gap-1 self-start sm:self-auto"
+              >
+                READ CHAPTER 2 →
+              </Link>
             </div>
           </div>
 

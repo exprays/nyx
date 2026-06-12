@@ -12,7 +12,7 @@ function ChangelogSection() {
           PROJECT SPEC & CHANGELOG
         </h2>
         <span className="text-[9px] md:text-xs bg-midnight-graphite px-2.5 py-1 text-cloud-white font-mono uppercase tracking-wider">
-          LATEST: v0.2.0
+          LATEST: v0.3.0
         </span>
       </div>
 
@@ -76,9 +76,9 @@ function ChangelogSection() {
           </div>
         </div>
 
-        {/* Release 3 (v0.3.0 - Planned) */}
-        <div className="border border-stone-gray bg-cloud-white bg-opacity-70 p-4 sm:p-6 flex flex-col gap-4 border-dashed">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-gray pb-3 opacity-60">
+        {/* Release 3 (v0.3.0) */}
+        <div className="border border-stone-gray bg-cloud-white p-4 sm:p-6 flex flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-gray pb-3">
             <div className="flex items-center gap-3">
               <span className="bg-stone-gray text-midnight-graphite border border-stone-gray px-2 py-0.5 text-xs font-mono font-bold">
                 v0.3.0
@@ -87,19 +87,20 @@ function ChangelogSection() {
                 SPR-NYX-2 // Core Execution Engine
               </h3>
             </div>
-            <span className="text-xs font-mono text-smoke-gray">IN PROGRESS</span>
+            <span className="text-xs font-mono text-smoke-gray">2026.06.12</span>
           </div>
 
-          <p className="text-xs sm:text-sm leading-relaxed text-steel-gray font-mono opacity-70">
-            Building the cycle-by-cycle execution engine. Modeling the thread execution state machine (FETCH, DECODE, EXECUTE, MEM_REQ, MEM_WAIT), warp scheduler instruction dispatching, and NZP register status flag updates.
+          <p className="text-xs sm:text-sm leading-relaxed text-steel-gray font-mono">
+            We released the cycle-accurate thread execution engine. This models FETCH, DECODE, EXECUTE, MEM_REQ, MEM_WAIT states, register files, special registers, and dispatcher assignment.
           </p>
 
-          <div className="flex flex-col gap-2 opacity-70">
-            <h4 className="text-xs font-bold font-sans text-ash-black uppercase tracking-wider">Upcoming Features:</h4>
+          <div className="flex flex-col gap-2">
+            <h4 className="text-xs font-bold font-sans text-ash-black uppercase tracking-wider">Key Implementations:</h4>
             <ul className="list-disc pl-5 text-xs text-smoke-gray flex flex-col gap-2 leading-relaxed font-mono">
-              <li><strong>Execution State Machine</strong>: Implementing cycle transitions for FETCH, DECODE, EXECUTE, MEM_REQ, and MEM_WAIT.</li>
-              <li><strong>Warp Dispatcher</strong>: Scheduling active execution lanes under NZP masks to support branch convergence/divergence.</li>
-              <li><strong>Terminal Tracer</strong>: Enhancing cycle logging to output complete execution traces step-by-step.</li>
+              <li><strong>Thread State Machine</strong>: Implemented explicit cycle transitions for FETCH, DECODE, EXECUTE, MEM_REQ, MEM_WAIT, SYNC_WAIT, and DONE.</li>
+              <li><strong>Special Register Injection</strong>: Wired %threadIdx, %blockIdx, and %blockDim injection at thread creation.</li>
+              <li><strong>Dispatcher Pipeline</strong>: Managed a block queue and round-robin SM block assignment.</li>
+              <li><strong>Cycle Logger</strong>: Enhanced the trace output with cycle, SM, warp, and thread telemetry details.</li>
             </ul>
           </div>
         </div>
@@ -121,8 +122,8 @@ export default function Home() {
 
       {/* Top Banner Link (Flame Orange Update Banner) */}
       <div className="w-full bg-flame-orange text-cloud-white text-[10px] sm:text-xs py-2.5 px-4 text-center font-bold tracking-tight border-b border-midnight-graphite font-mono">
-        <span className="hidden sm:inline">NYX v0.2.0 ISA & ASSEMBLER IS LIVE. </span>
-        <span className="sm:hidden">NYX v0.2.0 LIVE: </span>
+        <span className="hidden sm:inline">NYX v0.3.0 THREAD ENGINE IS LIVE. </span>
+        <span className="sm:hidden">NYX v0.3.0 LIVE: </span>
         <button
           onClick={() => {
             const el = document.getElementById("changelog-section");
@@ -145,7 +146,7 @@ export default function Home() {
               Project NYX
             </span>
             <span className="text-[10px] border border-stone-gray px-2 py-0.5 text-smoke-gray select-none hidden sm:inline-block">
-              v0.2.0-alpha
+              v0.3.0-alpha
             </span>
           </div>
 
@@ -364,7 +365,7 @@ export default function Home() {
               </tr>
               <tr className="border-b border-stone-gray border-opacity-50">
                 <td className="py-2 text-smoke-gray">LATEST RELEASE</td>
-                <td className="text-right font-bold text-electric-blue">v0.2.0</td>
+                <td className="text-right font-bold text-electric-blue">v0.3.0</td>
               </tr>
               <tr className="border-b border-stone-gray border-opacity-50">
                 <td className="py-2 text-smoke-gray">GRID DIM</td>
@@ -536,7 +537,7 @@ export default function Home() {
 
               {/* Secondary Detail Text */}
               <div className="mt-8 pt-6 border-t border-stone-gray border-opacity-40 text-[10px] font-mono text-smoke-gray uppercase tracking-wider">
-                CORE // SPEC_VERSION: v0.2.0
+                CORE // SPEC_VERSION: v0.3.0
               </div>
             </div>
 

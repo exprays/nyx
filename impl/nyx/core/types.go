@@ -158,3 +158,85 @@ type KernelConfig struct {
 	GlobalMem   []int32           // initial global memory state
 	SharedMemSz int               // shared memory bytes per block
 }
+
+// NewThread creates a thread with its special registers pre-injected
+func NewThread(globalID, threadIdx, blockIdx, blockDim int) *Thread {
+	t := &Thread{
+		ID:        globalID,
+		BlockID:   blockIdx,
+		ThreadIdx: threadIdx,
+		BlockDim:  blockDim,
+		State:     ThreadFetch,
+	}
+	t.Registers[isa.REG_THREAD_IDX] = int32(threadIdx)
+	t.Registers[isa.REG_BLOCK_IDX] = int32(blockIdx)
+	t.Registers[isa.REG_BLOCK_DIM] = int32(blockDim)
+	return t
+}
+
+// IsDone returns true if the thread has retired
+func (t *Thread) IsDone() bool {
+	return t.State == ThreadDone
+}
+
+// IsStalled returns true if the thread is waiting on memory
+func (t *Thread) IsStalled() bool {
+	return t.State == ThreadMemWait || t.State == ThreadSyncWait
+}
+
+// NewWarp creates a warp from a slice of threads
+// All threads start active (mask = all 1s)
+func NewWarp(id int, threads []*Thread) *Warp {
+	mask := uint32((1 << len(threads)) - 1)
+	return &Warp{
+		ID:         id,
+		Threads:    threads,
+		ActiveMask: mask,
+		State:      WarpReady,
+		PC:         0,
+	}
+}
+
+// AllDone returns true if every thread in the warp has retired
+func (w *Warp) AllDone() bool {
+	for _, t := range w.Threads {
+		if !t.IsDone() {
+			return false
+		}
+	}
+	return true
+}
+
+// ActiveCount returns how many threads are currently active
+func (w *Warp) ActiveCount() int {
+	n := 0
+	for i := range w.Threads {
+		if w.ActiveMask&(1<<uint(i)) != 0 {
+			n++
+		}
+	}
+	return n
+}
+
+// NewBlock builds a block from a config and block index
+func NewBlock(blockIdx, blockDim, sharedMemSz int) *Block {
+	warpsNeeded := blockDim / 32
+	warps := make([]*Warp, warpsNeeded)
+
+	for wi := 0; wi < warpsNeeded; wi++ {
+		threads := make([]*Thread, 32)
+		for ti := 0; ti < 32; ti++ {
+			localThreadIdx := wi*32 + ti
+			globalID := blockIdx*blockDim + localThreadIdx
+			threads[ti] = NewThread(globalID, localThreadIdx, blockIdx, blockDim)
+		}
+		warps[wi] = NewWarp(wi, threads)
+	}
+
+	return &Block{
+		ID:          blockIdx,
+		Warps:       warps,
+		SharedMem:   make([]int32, sharedMemSz),
+		SharedMemSz: sharedMemSz,
+	}
+}

@@ -517,7 +517,11 @@ LDR  R4, R4                ; load A[thread_id]       ← different memory addres
               Running <code>make run-impl</code> (or <code>go run main.go</code> inside the <code>impl/nyx</code> directory) now shows both kernels fully disassembled with their hex encodings, and confirms every instruction survives the encode/decode round trip.
             </p>
             <p className="font-mono text-xs sm:text-sm text-steel-gray leading-relaxed mt-6 border-t border-stone-gray pt-4">
-              <strong className="text-midnight-graphite">Next up — Chapter 2</strong>: We build the actual thread execution engine. Each thread gets a real state machine: FETCH → DECODE → EXECUTE → UPDATE. We'll run a single warp of 32 threads through the vecadd kernel and watch every instruction fire in the terminal trace.
+              <strong className="text-midnight-graphite">Next up — </strong>
+              <Link href="/blog/chapter-2" className="text-electric-blue hover:underline font-bold">
+                Chapter 2: The Thread Execution Engine
+              </Link>
+              {". We build the actual thread execution engine. Each thread gets a real state machine: FETCH → DECODE → EXECUTE → UPDATE. We'll run a single warp of 32 threads through the vecadd kernel and watch every instruction fire in the terminal trace."}
             </p>
           </section>
 
@@ -526,6 +530,9 @@ LDR  R4, R4                ; load A[thread_id]       ← different memory addres
           <div className="border-t border-stone-gray pt-6 mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <Link href="/blog" className="text-xs font-bold font-mono text-electric-blue hover:underline whitespace-nowrap">
               ← BACK TO BLOG INDEX
+            </Link>
+            <Link href="/blog/chapter-2" className="text-xs font-bold font-mono bg-flame-orange text-white px-4 py-2 hover:bg-opacity-95 whitespace-nowrap text-center">
+              READ CHAPTER 2 →
             </Link>
             <Link href="/playground" className="text-xs font-bold font-mono bg-midnight-graphite text-white px-4 py-2 hover:bg-opacity-95 whitespace-nowrap text-center">
               TRY PLAYGROUND →

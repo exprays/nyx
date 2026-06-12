@@ -1,6 +1,3 @@
-// Nyx tracer
-// Shows traces for every cycle, every thread, every warp!
-
 package trace
 
 import (
@@ -9,27 +6,36 @@ import (
 	"time"
 )
 
-// Level controls how much trace detail is shown
+// ANSI color codes
+const (
+	colorReset  = "\033[0m"
+	colorGray   = "\033[90m"
+	colorGreen  = "\033[32m"
+	colorYellow = "\033[33m"
+	colorRed    = "\033[31m"
+	colorCyan   = "\033[36m"
+	colorBlue   = "\033[34m"
+	colorBold   = "\033[1m"
+)
+
 type Level int
 
 const (
-	LevelSilent  Level = iota // no output
-	LevelSummary              // only cycle count and SM states
-	LevelWarp                 // per-warp state each cycle
-	LevelThread               // full per-thread detail each cycle
+	LevelSilent Level = iota
+	LevelSummary
+	LevelWarp
+	LevelThread
 )
 
-// Event is a single trace event emitted during simulation
 type Event struct {
 	Cycle    int
 	SMID     int
 	WarpID   int
 	ThreadID int
-	Kind     string // "FETCH", "EXECUTE", "MEM_REQ", "MEM_RESP", "BRANCH", "RET", "SYNC"
-	Detail   string // human readable detail
+	Kind     string
+	Detail   string
 }
 
-// Tracer collects and displays trace events
 type Tracer struct {
 	Level     Level
 	Events    []Event
@@ -39,7 +45,7 @@ type Tracer struct {
 func NewTracer(level Level) *Tracer {
 	return &Tracer{
 		Level:     level,
-		Events:    make([]Event, 0, 1024),
+		Events:    make([]Event, 0, 4096),
 		StartTime: time.Now(),
 	}
 }
@@ -53,51 +59,90 @@ func (t *Tracer) Emit(e Event) {
 }
 
 func (t *Tracer) print(e Event) {
+	color := kindColor(e.Kind)
+
 	switch t.Level {
 	case LevelSummary:
-		// Only print non-thread events
-		if e.ThreadID == -1 {
-			fmt.Printf("[cycle %04d] SM%d W%d | %s %s\n",
-				e.Cycle, e.SMID, e.WarpID, e.Kind, e.Detail)
+		// Only block and warp-level events
+		if e.Kind == "BLOCK_DONE" || e.Kind == "WARP_DONE" || e.Kind == "SYNC_RELEASE" {
+			fmt.Printf("%s[%04d]%s SM%d W%02d  %s%-12s%s %s\n",
+				colorGray, e.Cycle, colorReset,
+				e.SMID, e.WarpID,
+				color, e.Kind, colorReset,
+				e.Detail)
 		}
+
 	case LevelWarp:
-		if e.ThreadID == -1 {
-			fmt.Printf("[cycle %04d] SM%d W%02d         | %-10s %s\n",
-				e.Cycle, e.SMID, e.WarpID, e.Kind, e.Detail)
+		if e.ThreadID < 0 {
+			fmt.Printf("%s[%04d]%s SM%d W%02d        %s%-12s%s %s\n",
+				colorGray, e.Cycle, colorReset,
+				e.SMID, e.WarpID,
+				color, e.Kind, colorReset,
+				e.Detail)
 		}
+
 	case LevelThread:
 		if e.ThreadID >= 0 {
-			fmt.Printf("[cycle %04d] SM%d W%02d T%03d     | %-10s %s\n",
-				e.Cycle, e.SMID, e.WarpID, e.ThreadID, e.Kind, e.Detail)
+			fmt.Printf("%s[%04d]%s SM%d W%02d T%03d  %s%-12s%s %s\n",
+				colorGray, e.Cycle, colorReset,
+				e.SMID, e.WarpID, e.ThreadID,
+				color, e.Kind, colorReset,
+				e.Detail)
 		} else {
-			fmt.Printf("[cycle %04d] SM%d W%02d           | %-10s %s\n",
-				e.Cycle, e.SMID, e.WarpID, e.Kind, e.Detail)
+			fmt.Printf("%s[%04d]%s SM%d W%02d        %s%-12s%s %s\n",
+				colorGray, e.Cycle, colorReset,
+				e.SMID, e.WarpID,
+				color, e.Kind, colorReset,
+				e.Detail)
 		}
 	}
 }
 
-// CycleBanner prints a divider at the start of each cycle
-func (t *Tracer) CycleBanner(cycle int) {
-	if t.Level >= LevelWarp {
-		fmt.Printf("\n%s CYCLE %04d %s\n",
-			strings.Repeat("─", 20), cycle, strings.Repeat("─", 20))
+func kindColor(kind string) string {
+	switch kind {
+	case "FETCH":
+		return colorGray
+	case "DECODE":
+		return colorBlue
+	case "EXECUTE":
+		return colorGreen
+	case "MEM_REQ":
+		return colorYellow
+	case "MEM_WAIT":
+		return colorYellow
+	case "WARP_DONE", "BLOCK_DONE":
+		return colorCyan
+	case "SYNC_RELEASE":
+		return colorCyan
+	case "RET", "DONE":
+		return colorRed
+	default:
+		return colorReset
 	}
 }
 
-// Summary prints final stats at the end of simulation
+func (t *Tracer) CycleBanner(cycle int) {
+	if t.Level >= LevelWarp {
+		fmt.Printf("\n%s%s CYCLE %04d %s%s\n",
+			colorBold+colorGray,
+			strings.Repeat("─", 18),
+			cycle,
+			strings.Repeat("─", 18),
+			colorReset)
+	}
+}
+
 func (t *Tracer) Summary(totalCycles int, globalMem []int32, showMemRange [2]int) {
 	elapsed := time.Since(t.StartTime)
 
-	fmt.Println()
-	fmt.Println(strings.Repeat("═", 52))
-	fmt.Println("  NYX SIMULATION COMPLETE")
-	fmt.Println(strings.Repeat("═", 52))
-	fmt.Printf("  Total cycles   : %d\n", totalCycles)
+	fmt.Printf("\n%s%s%s\n", colorBold, strings.Repeat("═", 52), colorReset)
+	fmt.Printf("%s  NYX SIMULATION COMPLETE%s\n", colorBold, colorReset)
+	fmt.Printf("%s%s%s\n", colorBold, strings.Repeat("═", 52), colorReset)
+	fmt.Printf("  Total cycles   : %s%d%s\n", colorGreen, totalCycles, colorReset)
 	fmt.Printf("  Total events   : %d\n", len(t.Events))
 	fmt.Printf("  Wall time      : %s\n", elapsed.Round(time.Millisecond))
 	fmt.Println(strings.Repeat("─", 52))
 
-	// Print a slice of global memory so you can see results
 	start := showMemRange[0]
 	end := showMemRange[1]
 	if end > len(globalMem) {
@@ -105,7 +150,9 @@ func (t *Tracer) Summary(totalCycles int, globalMem []int32, showMemRange [2]int
 	}
 	fmt.Printf("  Global mem [%d..%d]:\n", start, end-1)
 	for i := start; i < end; i++ {
-		fmt.Printf("    [%03d] = %d\n", i, globalMem[i])
+		fmt.Printf("    %s[%03d]%s = %s%d%s\n",
+			colorGray, i, colorReset,
+			colorGreen, globalMem[i], colorReset)
 	}
-	fmt.Println(strings.Repeat("═", 52))
+	fmt.Printf("%s%s%s\n", colorBold, strings.Repeat("═", 52), colorReset)
 }
