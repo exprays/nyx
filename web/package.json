@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@libsql/client": "^0.17.3",
     "@webcontainer/api": "^1.6.4",
     "next": "16.2.6",
     "react": "19.2.4",

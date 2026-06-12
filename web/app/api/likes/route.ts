@@ -1,25 +1,44 @@
 import { NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
+import { createClient } from "@libsql/client";
 
-const dataDir = path.join(process.cwd(), "data");
-const filePath = path.join(dataDir, "likes.json");
+const tursoUrl = process.env.TURSO_DATABASE_URL;
+const tursoToken = process.env.TURSO_AUTH_TOKEN;
 
-// Helper to safely load likes count
-async function getLikesMap(): Promise<Record<string, number>> {
-  try {
-    await fs.mkdir(dataDir, { recursive: true });
-    const fileContent = await fs.readFile(filePath, "utf8");
-    return JSON.parse(fileContent);
-  } catch (error) {
-    return {};
+const db = tursoUrl ? createClient({
+  url: tursoUrl,
+  authToken: tursoToken,
+}) : null;
+
+async function initDb() {
+  if (!db) {
+    throw new Error("TURSO_DATABASE_URL is not set.");
   }
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS likes (
+      slug TEXT PRIMARY KEY,
+      likes_count INTEGER DEFAULT 0
+    )
+  `);
+}
+async function getLikesMap(): Promise<Record<string, number>> {
+  await initDb();
+  const res = await db!.execute("SELECT slug, likes_count FROM likes");
+  const map: Record<string, number> = {};
+  for (const row of res.rows) {
+    map[row.slug as string] = Number(row.likes_count);
+  }
+  return map;
 }
 
-// Helper to safely write likes count
 async function saveLikesMap(data: Record<string, number>) {
-  await fs.mkdir(dataDir, { recursive: true });
-  await fs.writeFile(filePath, JSON.stringify(data, null, 2), "utf8");
+  await initDb();
+  for (const [slug, count] of Object.entries(data)) {
+    await db!.execute({
+      sql: `INSERT INTO likes (slug, likes_count) VALUES (?, ?)
+            ON CONFLICT(slug) DO UPDATE SET likes_count = excluded.likes_count`,
+      args: [slug, count]
+    });
+  }
 }
 
 export async function GET(request: Request) {
