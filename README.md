@@ -94,8 +94,8 @@ NYX is being built in public. Each part of the project corresponds to a chapter 
 | Chapter | Topic | Status |
 |---------|-------|--------|
 | [Chapter 0](https://nyx.exprays.com/blog/chapter-0) | Why CPUs and GPUs Are Fundamentally Different | ✅ Live |
-| Chapter 1 | ISA Specification & Custom Go Assembler | 🚧 In development |
-| Chapter 2 | Warp Scheduler & Thread Dispatch | ⬜ Planned |
+| Chapter 1 | ISA Specification & Custom Go Assembler | ✅ Live |
+| Chapter 2 | Warp Scheduler & Thread Dispatch | 🚧 In Development |
 | Chapter 3 | Memory Controller & Latency Simulation | ⬜ Planned |
 | Chapter 4 | Branch Divergence & Active Mask | ⬜ Planned |
 | Chapter 5 | Tracer & Telemetry Pipeline | ⬜ Planned |
